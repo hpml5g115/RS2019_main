@@ -41,7 +41,9 @@ using namespace rp::standalone::rplidar;
 
 //グラフ描画用プログラム
 void GraphGain(double x, double y, int *xr, int *yr);
-void PictureGrid(cv::Mat img);
+#ifndef _NO_GUI
+	void PictureGrid(cv::Mat img);
+#endif
 
 //初期化関数
 bool Initialize(RPlidarDriver * drv);

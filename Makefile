@@ -2,7 +2,7 @@
 
 #SRC = class.cpp myfunc.cpp move.cpp grouping.cpp nonstop_v2.cpp
 
-OBJS = class.o myfunc.o move.o grouping.o nonstop_v2.o
+OBJS = class.o myfunc.o move.o grouping.o main.o
 
 TARGET = nonstop
 
