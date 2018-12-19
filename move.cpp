@@ -5,7 +5,6 @@
 
 #include "move.h"
 
-/*
 void sigcatch(int sig){
 	printf(" detected.\n");
 	printf("motor stopping...");
@@ -18,7 +17,7 @@ void sigcatch(int sig){
 
 	exit(1);
 }
-
+/*
 int move_conv(double value) {
 	int num;
 	num = value / one_move;
@@ -136,6 +135,7 @@ void Pin_Initialize(void){
 	digitalWrite(SIG_SHOOT, 0);
 	digitalWrite(SIG_FORCE, 0);
 }
+*/
 
 void Sig_Initialize(void){
     if(SIG_ERR == signal(SIGINT, sigcatch)){
@@ -183,6 +183,7 @@ bool ForceCapture(void){
 	}
 }
 
+/*
 void moving(double distance, double angle){
 	if(angle < 0){
 		double abs_tmp = fabs(angle);
@@ -199,6 +200,10 @@ void moving(double distance, double angle){
 */
 
 robomove::robomove(){
+	move_update = false;
+	thread_continue = false;
+	dir = M_STOP;
+	pulse_num = 0;
 	if(wiringPiSetupGpio() == -1){
 		std::cerr << "wiringPi setup eroor!" << std::endl;
 		exit(1);
@@ -221,6 +226,10 @@ robomove::robomove(){
 }
 
 robomove::~robomove(){
+	if(thread_continue==true){
+		thread_continue = false;
+		move_th.join();
+	}
 	digitalWrite(DIR_0,0);
 	digitalWrite(DIR_1,0);
 	digitalWrite(PULSE,0);
@@ -229,41 +238,88 @@ robomove::~robomove(){
 }
 
 void robomove::Fwd(double distance){
-	int move_cnt;
-    digitalWrite(DIR_0, 0);
-    digitalWrite(DIR_1, 0);
-    move_cnt = move_conv(length);
-    delay(10);
-    for(int i = 0; i < move_cnt; i++){
-        digitalWrite(PULSE,1);
-        //COMPLETEまで待機
-        while(digitalRead(COMPLETE) == 0);
-        //PULSEを下げる
-        digitalWrite(PULSE, 0);
-        delay(10);
-    }
+	dir = M_FWD;
+	pulse_num = MmToPulse(distance);
+	move_update = true;
 }
 
 void robomove::Rev(double distance){
-
+	dir = M_REV;
+	pulse_num = MmToPulse(distance);
+	move_update = true;
 }
 
 void robomove::Right(double angle){
-	
+	dir = M_RIGHT;
+	pulse_num = AngleToPulse(angle);
+	move_update = true;
 }
 
 void robomove::Left(double angle){
+	dir = M_LEFT;
+	pulse_num = AngleToPulse(angle);
+	move_update = true;
+}
 
+void robomove::Th_start(void){
+	thread_continue = true;
+	std::thread th(Run, this);
+	move_th = std::move(th);
+}
+
+void robomove::Th_end(void){
+	thread_continue = false;
+	move_th.join();
 }
 
 long robomove::MmToPulse(double distance){
-
+	//進みに対してどれくらいのパルスが必要か計算
 }
 
 long robomove::AngleToPulse(double angle){
-
+	//回転に対してどれくらいのパルスが必要か計算
 }
 
 void Run(void){
-
+	bool move_finished = false;
+	long now_pulse_num = 0;
+	thread_continue = true;
+	while(thread_continue==true){
+		//移動の指令値が出たとき
+		if(move_update==true){
+			now_pulse_num = 0;
+			switch(dir){
+				case M_FWD:
+					digitalWrite(DIR_0, 0);
+					digitalWrite(DIR_1, 0);
+					break;
+				case M_REV:
+					digitalWrite(DIR_0, 1);
+					digitalWrite(DIR_1, 1);
+					break;
+				case M_RIGHT:
+					digitalWrite(DIR_0, 1);
+					digitalWrite(DIR_1, 0);
+					break;
+				case M_LEFT:
+					digitalWrite(DIR_0, 0);
+					digitalWrite(DIR_1, 1);
+					break;
+				default:
+					digitalWrite(DIR_0, 0);
+					digitalWrite(DIR_1, 0);
+					break;
+			}
+		}
+		//移動中
+		if(move_finished==false){
+			digitalWrite(PULSE, 1);
+			digitalWrite(COMPLETE, 1);
+			now_pulse_num++;
+		}
+		delay(10);
+		digitalWrite(PULSE, 1);
+		digitalWrite(COMPLETE, 1);
+	}
+	std::cout << "move thread finished" << std::endl;
 }

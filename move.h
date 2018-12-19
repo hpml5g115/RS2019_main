@@ -38,7 +38,7 @@ void left(double angle);
 //四捨五入用関数
 int move_conv(double value);
 int turn_conv(double value);
-
+*/
 
 //サーボ関連
 bool BallCaptured(void);
@@ -48,8 +48,7 @@ void BallShoot(void);
 bool ForceCapture(void);
 
 //動作命令の関数
-void moving(double distance, double angle);
-*/
+// void moving(double distance, double angle);
 
 //新版　マルチスレッド化によりパルス出しっぱなしにする
 class robomove{
@@ -65,10 +64,19 @@ public:
     void Th_start(void);
     void Th_end(void);
 private:
-    long MmToPulse(double distance);
-    long AngleToPulse(double angle);
-    void Run(void);
+  bool move_update;
+  std::thread move_th;
+  bool thread_continue;
+  const int M_STOP = 0;
+  const int M_FWD = 1;
+  const int M_REV = 2;
+  const int M_RIGHT = 3;
+  const int M_LEFT = 4;
+  int dir;
+  long pulse_num;
+
+  long MmToPulse(double distance);
+  long AngleToPulse(double angle);
+  void Run(void);
 }
-
-
 #endif
