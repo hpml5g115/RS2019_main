@@ -1,13 +1,11 @@
 #include <wiringPi.h>
 #include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <cmath>
 #include <iostream>
 
 #include "move.h"
 
-
+/*
 void sigcatch(int sig){
 	printf(" detected.\n");
 	printf("motor stopping...");
@@ -197,4 +195,75 @@ void moving(double distance, double angle){
 	//			std::cout << "left" << std::endl;
 	}
 	fwd(distance);
+}
+*/
+
+robomove::robomove(){
+	if(wiringPiSetupGpio() == -1){
+		std::cerr << "wiringPi setup eroor!" << std::endl;
+		exit(1);
+	}
+
+	//ピン初期化
+	pinMode(DIR_0,OUTPUT);
+	pinMode(DIR_1,OUTPUT);
+	pinMode(PULSE,OUTPUT);
+	pinMode(COMPLETE,INPUT);
+	pinMode(SIG_SHOOT, OUTPUT);
+	pinMode(SIG_CAP, INPUT);
+	pinMode(SIG_FORCE, OUTPUT);
+
+	digitalWrite(DIR_0,0);
+	digitalWrite(DIR_1,0);
+	digitalWrite(PULSE,0);
+	digitalWrite(SIG_SHOOT, 0);
+	digitalWrite(SIG_FORCE, 0);
+}
+
+robomove::~robomove(){
+	digitalWrite(DIR_0,0);
+	digitalWrite(DIR_1,0);
+	digitalWrite(PULSE,0);
+	digitalWrite(SIG_SHOOT, 0);
+	digitalWrite(SIG_FORCE, 0);
+}
+
+void robomove::Fwd(double distance){
+	int move_cnt;
+    digitalWrite(DIR_0, 0);
+    digitalWrite(DIR_1, 0);
+    move_cnt = move_conv(length);
+    delay(10);
+    for(int i = 0; i < move_cnt; i++){
+        digitalWrite(PULSE,1);
+        //COMPLETEまで待機
+        while(digitalRead(COMPLETE) == 0);
+        //PULSEを下げる
+        digitalWrite(PULSE, 0);
+        delay(10);
+    }
+}
+
+void robomove::Rev(double distance){
+
+}
+
+void robomove::Right(double angle){
+	
+}
+
+void robomove::Left(double angle){
+
+}
+
+long robomove::MmToPulse(double distance){
+
+}
+
+long robomove::AngleToPulse(double angle){
+
+}
+
+void Run(void){
+
 }

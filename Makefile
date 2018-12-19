@@ -4,7 +4,7 @@
 
 OBJS = class.o myfunc.o move.o grouping.o main.o
 
-TARGET = nonstop
+TARGET = rbsc2019
 
 CFLAGS = -Wall -O3 `pkg-config --libs opencv` -L/home/pi/rp_libs -lrplidar -lpthread -lwiringPi
 

@@ -1,6 +1,8 @@
 #ifndef _MOVE
 #define _MOVE
 
+#include <thread>
+
 //昔の配置
 //PIC中心部より12,16,20,21
 #define DIR_0 26
@@ -19,7 +21,7 @@ const double one_turn = 6.0;
 
 //Ctrl+Cのシグナルハンドラー
 void sigcatch(int sig);
-
+/*
 //wiringPiの初期化
 void Pin_Initialize(void);
 //シグナルハンドラーの初期化
@@ -47,5 +49,26 @@ bool ForceCapture(void);
 
 //動作命令の関数
 void moving(double distance, double angle);
+*/
+
+//新版　マルチスレッド化によりパルス出しっぱなしにする
+class robomove{
+public:
+    robomove();
+    ~robomove();
+    //前進(mm)
+    void Fwd(double distance);
+    void Rev(double distance);
+    void Right(double angle);
+    void Left(double angle);
+
+    void Th_start(void);
+    void Th_end(void);
+private:
+    long MmToPulse(double distance);
+    long AngleToPulse(double angle);
+    void Run(void);
+}
+
 
 #endif
