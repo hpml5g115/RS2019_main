@@ -202,6 +202,8 @@ void moving(double distance, double angle){
 robomove::robomove(){
 	move_update = false;
 	thread_continue = false;
+	move_finished = false;
+	move_abort = false;
 	dir = M_STOP;
 	pulse_num = 0;
 	if(wiringPiSetupGpio() == -1){
@@ -223,6 +225,7 @@ robomove::robomove(){
 	digitalWrite(PULSE,0);
 	digitalWrite(SIG_SHOOT, 0);
 	digitalWrite(SIG_FORCE, 0);
+	std::cout << "setup finished." << std::endl;
 }
 
 robomove::~robomove(){
@@ -238,8 +241,10 @@ robomove::~robomove(){
 }
 
 void robomove::Fwd(double distance){
+	std::cout<<"fwd"<<std::endl;
 	dir = M_FWD;
 	pulse_num = MmToPulse(distance);
+	std::cout<<pulse_num<<std::endl;
 	move_update = true;
 }
 
@@ -261,9 +266,17 @@ void robomove::Left(double angle){
 	move_update = true;
 }
 
+void robomove::Stop(void){
+	move_abort = false;
+}
+
+bool robomove::ChkState(void){
+	return move_finished;
+}
+
 void robomove::Th_start(void){
 	thread_continue = true;
-	std::thread th(Run, this);
+	std::thread th(&robomove::Run, this);
 	move_th = std::move(th);
 }
 
@@ -274,22 +287,48 @@ void robomove::Th_end(void){
 
 long robomove::MmToPulse(double distance){
 	//進みに対してどれくらいのパルスが必要か計算
+	long num;
+	num = distance / one_move;
+	double tmp = distance / one_move;
+	double reminder;
+	reminder = tmp - num;
+//	std::cout << "function" << std::endl;
+//	std::cout << "num=" << num <<", tmp=" << tmp << std::endl;
+	if(reminder < 0.5) {
+		return num;
+	}
+	else {
+		return num + 1;
+	}
 }
 
 long robomove::AngleToPulse(double angle){
 	//回転に対してどれくらいのパルスが必要か計算
+	long num;
+	num = angle / one_turn;
+	double tmp = angle / one_turn;
+	double reminder;
+	reminder = tmp - num;
+	if(reminder < 0.5) {
+		return num;
+	}
+	else {
+		return num + 1;
+	}
 }
 
-void Run(void){
-	bool move_finished = false;
+void robomove::Run(void){
 	long now_pulse_num = 0;
 	thread_continue = true;
-	while(thread_continue==true){
+	while(thread_continue == true){
 		//移動の指令値が出たとき
-		if(move_update==true){
+		if(move_update == true){
 			now_pulse_num = 0;
+			move_update = false;
+			move_finished = false;
 			switch(dir){
 				case M_FWD:
+					std::cout<<"fwd move in thread"<<std::endl;
 					digitalWrite(DIR_0, 0);
 					digitalWrite(DIR_1, 0);
 					break;
@@ -311,15 +350,24 @@ void Run(void){
 					break;
 			}
 		}
+		//旧版のPICに合わせているので、いずれパルスに応じて要修正
 		//移動中
-		if(move_finished==false){
+		if(move_finished == false){
 			digitalWrite(PULSE, 1);
-			digitalWrite(COMPLETE, 1);
+			//COMPLETEまで待機
+			while(digitalRead(COMPLETE) == 0){
+				std::cout<<"wait..."<<std::endl;
+			}
+			//PULSEを下げる
+			digitalWrite(PULSE, 0);
 			now_pulse_num++;
+			std::cout<<now_pulse_num<<std::endl;
+			if(now_pulse_num == pulse_num){
+				std::cout<<now_pulse_num<<std::endl;
+				move_finished = true;
+			}
 		}
-		delay(10);
-		digitalWrite(PULSE, 1);
-		digitalWrite(COMPLETE, 1);
+		// delay(10);
 	}
 	std::cout << "move thread finished" << std::endl;
 }

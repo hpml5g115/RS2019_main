@@ -8,7 +8,7 @@ TARGET = rbsc2019
 
 CFLAGS = -Wall -O3 `pkg-config --libs opencv` -L/home/pi/rp_libs -lrplidar -lpthread -lwiringPi
 
-LDFLAGS = `pkg-config --cflags opencv` -I/home/pi/rp_libs/include
+LDFLAGS = -std=c++11  `pkg-config --cflags opencv` -I/home/pi/rp_libs/include
 
 CC = g++
 

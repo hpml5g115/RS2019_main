@@ -33,11 +33,20 @@
 
 int main(void) {
 	Sig_Initialize();
-	Pin_Initialize();
+	// Pin_Initialize();
 
-	fwd(300);
+	// fwd(300);
 
-	Exit_pin();
+	robomove mov;
+	mov.Th_start();
+	mov.Fwd(300);
+	delay(500);
+	while(mov.ChkState()==false);
+	mov.Th_end();
+
+
+
+	// Exit_pin();
 
 	return 0;
 }

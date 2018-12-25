@@ -5,6 +5,7 @@
 
 //昔の配置
 //PIC中心部より12,16,20,21
+//昔のバージョンなので確認次第削除
 #define DIR_0 26
 #define DIR_1 19
 #define PULSE 13
@@ -15,18 +16,24 @@
 #define SIG_SHOOT 16
 #define SIG_FORCE 12
 
-
 const double one_move = 55;
 const double one_turn = 6.0;
 
+const int M_STOP = 0;
+const int M_FWD = 1;
+const int M_REV = 2;
+const int M_RIGHT = 3;
+const int M_LEFT = 4;
+
 //Ctrl+Cのシグナルハンドラー
 void sigcatch(int sig);
-/*
+
 //wiringPiの初期化
-void Pin_Initialize(void);
+// void Pin_Initialize(void);
 //シグナルハンドラーの初期化
 void Sig_Initialize(void);
 
+/*
 void Exit_pin(void);
 
 //ステッピングモーターの移動制御
@@ -60,23 +67,23 @@ public:
     void Rev(double distance);
     void Right(double angle);
     void Left(double angle);
+    void Stop(void);
+    bool ChkState(void);
 
     void Th_start(void);
     void Th_end(void);
+    
 private:
   bool move_update;
   std::thread move_th;
   bool thread_continue;
-  const int M_STOP = 0;
-  const int M_FWD = 1;
-  const int M_REV = 2;
-  const int M_RIGHT = 3;
-  const int M_LEFT = 4;
+  bool move_finished;
+  bool move_abort;
   int dir;
   long pulse_num;
 
   long MmToPulse(double distance);
   long AngleToPulse(double angle);
   void Run(void);
-}
+};
 #endif
