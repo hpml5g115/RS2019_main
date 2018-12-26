@@ -39,26 +39,26 @@ int main(void) {
 
 	robomove mov;
 	mov.Th_start();
-	
-	// std::cout<<"fwd"<<std::endl;
+
+	// std::cout << "fwd" << std::endl;
 	// mov.Fwd(300);
 	// delay(1);
 	// while(mov.ChkState()==false);
 	// delay(1000);
 
-	// std::cout<<"rev"<<std::endl;
+	std::cout << "rev" << std::endl;
 	// mov.Rev(300);
 	// delay(1);
 	// while(mov.ChkState()==false);
 	// delay(1000);
 
-	std::cout<<"right"<<std::endl;
+	std::cout << "right" << std::endl;
 	mov.Right(90.);
 	delay(1);
 	while(mov.ChkState()==false);
 	delay(1000);
 
-	std::cout<<"left"<<std::endl;
+	std::cout << "left" << std::endl;
 	mov.Left(90.);
 	delay(1);
 	while(mov.ChkState()==false);

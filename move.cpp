@@ -89,7 +89,7 @@ robomove::robomove(){
 }
 
 robomove::~robomove(){
-	if(thread_continue==true){
+	if(thread_continue == true){
 		thread_continue = false;
 		move_th.join();
 	}
@@ -153,11 +153,11 @@ long robomove::MmToPulse(double distance){
 	円周：182.12mm
 	1パルスあたり182.12/360*1.8=0.9106mm
 	*/
-	const double dirPerPulse=58.*M_PI/360.*1.8;
+	const double dirPerPulse = 58. * M_PI / 360. * 1.8;
 	// std::cout<<dirPerPulse<<std::endl;
 	// std::cout<<"pulse:"<<(distance/dirPerPulse)<<std::endl;
 	// std::cout<<"pulse:"<<round(distance/dirPerPulse)<<std::endl;
-	return round(distance/dirPerPulse);
+	return round(distance / dirPerPulse);
 }
 
 long robomove::AngleToPulse(double angle){
@@ -170,11 +170,11 @@ long robomove::AngleToPulse(double angle){
 	1回転→200パルス
 	実測→200パルスで90度
 	*/
-	const double anglePerPulse=210./58./1.8;
+	const double anglePerPulse = 210. / 58. / 1.8;
 	// std::cout<<anglePerPulse<<std::endl;
 	// std::cout<<"pulse:"<<(anglePerPulse*angle)<<std::endl;
 	// std::cout<<"cast_pulse:"<<round(anglePerPulse*angle)<<std::endl;
-	return round(anglePerPulse*angle);
+	return round(anglePerPulse * angle);
 }
 
 void robomove::Run(void){
@@ -211,8 +211,8 @@ void robomove::Run(void){
 		}
 		//移動中
 		if(move_finished == false){
-			digitalWrite(R_PULSE,1);
-			digitalWrite(L_PULSE,1);
+			digitalWrite(R_PULSE, 1);
+			digitalWrite(L_PULSE, 1);
 			delay(4);
 			now_pulse_num++;
 			if(now_pulse_num == pulse_num){
@@ -220,8 +220,8 @@ void robomove::Run(void){
 			}
 		}
 		//PULSEを下げる
-		digitalWrite(R_PULSE,0);
-		digitalWrite(L_PULSE,0);
+		digitalWrite(R_PULSE, 0);
+		digitalWrite(L_PULSE, 0);
 		delay(4);
 	}
 	std::cout << "move thread finished" << std::endl;
