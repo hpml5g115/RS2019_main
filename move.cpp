@@ -8,148 +8,22 @@
 void sigcatch(int sig){
 	printf(" detected.\n");
 	printf("motor stopping...");
-	digitalWrite(DIR_0,0);
-	digitalWrite(DIR_1,0);
-	digitalWrite(PULSE,0);
+	digitalWrite(L_PULSE, 0);
+	digitalWrite(L_DIR, 0);
+	digitalWrite(R_PULSE, 0);
+	digitalWrite(R_DIR, 0);
 	digitalWrite(SIG_SHOOT, 0);
 	digitalWrite(SIG_FORCE, 0);
   	printf("done.\n");
 
 	exit(1);
 }
-/*
-int move_conv(double value) {
-	int num;
-	num = value / one_move;
-	double tmp = value / one_move;
-	double reminder;
-	reminder = tmp - num;
-//	std::cout << "function" << std::endl;
-//	std::cout << "num=" << num <<", tmp=" << tmp << std::endl;
-	if(reminder < 0.5) {
-		return num;
-	}
-	else {
-		return num + 1;
-	}
-}
-
-
-int turn_conv(double value) {
-	int num;
-	num = value / one_turn;
-	double tmp = value / one_turn;
-	double reminder;
-	reminder = tmp - num;
-	if(reminder < 0.5) {
-		return num;
-	}
-	else {
-		return num + 1;
-	}
-}
-
-
-
-void fwd(double length){
-	int move_cnt;
-    digitalWrite(DIR_0, 0);
-    digitalWrite(DIR_1, 0);
-    move_cnt = move_conv(length);
-    delay(10);
-    for(int i = 0; i < move_cnt; i++){
-        digitalWrite(PULSE,1);
-        //COMPLETEまで待機
-        while(digitalRead(COMPLETE) == 0);
-        //PULSEを下げる
-        digitalWrite(PULSE, 0);
-        delay(10);
-    }
-}
-void rev(double length){
-	int move_cnt;
-    digitalWrite(DIR_0, 1);
-    digitalWrite(DIR_1, 1);
-    move_cnt = move_conv(length);
-    delay(10);
-    for(int i = 0; i < move_cnt; i++){
-        digitalWrite(PULSE,1);
-        //COMPLETEまで待機
-        while(digitalRead(COMPLETE) == 0);
-        //PULSEを下げる
-        digitalWrite(PULSE, 0);
-        delay(10);
-    }
-}
-void right(double angle){
-	int deg_cnt;
-    digitalWrite(DIR_0, 1);
-    digitalWrite(DIR_1, 0);
-    deg_cnt = turn_conv(angle);
-
-    delay(10);
-    for(int i = 0; i < deg_cnt; i++){
-        digitalWrite(PULSE,1);
-        //COMPLETEまで待機
-        while(digitalRead(COMPLETE) == 0);
-        //PULSEを下げる
-        digitalWrite(PULSE, 0);
-        delay(10);
-    }
-}
-void left(double angle){
-	int deg_cnt;
-    digitalWrite(DIR_0, 0);
-    digitalWrite(DIR_1, 1);
-    deg_cnt = turn_conv(angle);
-
-    delay(10);
-    for(int i = 0; i < deg_cnt; i++){
-        digitalWrite(PULSE,1);
-        //COMPLETEまで待機
-        while(digitalRead(COMPLETE) == 0);
-        //PULSEを下げる
-        digitalWrite(PULSE, 0);
-        delay(10);
-    }
-}
-
-void Pin_Initialize(void){
-	if(wiringPiSetupGpio() == -1){
-		printf("wiringPi setup eroor.\n");
-		exit(1);
-	}
-
-	//ピン初期化
-	pinMode(DIR_0,OUTPUT);
-	pinMode(DIR_1,OUTPUT);
-	pinMode(PULSE,OUTPUT);
-	pinMode(COMPLETE,INPUT);
-	pinMode(SIG_SHOOT, OUTPUT);
-	pinMode(SIG_CAP, INPUT);
-	pinMode(SIG_FORCE, OUTPUT);
-
-	digitalWrite(DIR_0,0);
-	digitalWrite(DIR_1,0);
-	digitalWrite(PULSE,0);
-	digitalWrite(SIG_SHOOT, 0);
-	digitalWrite(SIG_FORCE, 0);
-}
-*/
 
 void Sig_Initialize(void){
     if(SIG_ERR == signal(SIGINT, sigcatch)){
         printf("failed to set signal handler.\n");
         exit(1);
     }
-}
-
-void Exit_pin(void){
-	digitalWrite(DIR_0,0);
-	digitalWrite(DIR_1,0);
-	digitalWrite(PULSE,0);
-	digitalWrite(SIG_SHOOT, 0);
-	digitalWrite(SIG_FORCE, 0);
 }
 
 bool BallCaptured(void){
@@ -183,22 +57,7 @@ bool ForceCapture(void){
 	}
 }
 
-/*
-void moving(double distance, double angle){
-	if(angle < 0){
-		double abs_tmp = fabs(angle);
-		right(abs_tmp);
-	//			std::cout << "right" << std::endl;
-	}
-	else{
-		double abs_tmp = fabs(angle);
-		left(abs_tmp);
-	//			std::cout << "left" << std::endl;
-	}
-	fwd(distance);
-}
-*/
-
+//新作部分
 robomove::robomove(){
 	move_update = false;
 	thread_continue = false;
@@ -212,17 +71,18 @@ robomove::robomove(){
 	}
 
 	//ピン初期化
-	pinMode(DIR_0,OUTPUT);
-	pinMode(DIR_1,OUTPUT);
-	pinMode(PULSE,OUTPUT);
-	pinMode(COMPLETE,INPUT);
+	pinMode(R_DIR, OUTPUT);
+	pinMode(L_DIR, OUTPUT);
+	pinMode(R_PULSE, OUTPUT);
+	pinMode(L_PULSE, OUTPUT);
 	pinMode(SIG_SHOOT, OUTPUT);
 	pinMode(SIG_CAP, INPUT);
 	pinMode(SIG_FORCE, OUTPUT);
 
-	digitalWrite(DIR_0,0);
-	digitalWrite(DIR_1,0);
-	digitalWrite(PULSE,0);
+	digitalWrite(L_PULSE, 0);
+	digitalWrite(L_DIR, 0);
+	digitalWrite(R_PULSE, 0);
+	digitalWrite(R_DIR, 0);
 	digitalWrite(SIG_SHOOT, 0);
 	digitalWrite(SIG_FORCE, 0);
 	std::cout << "setup finished." << std::endl;
@@ -233,18 +93,17 @@ robomove::~robomove(){
 		thread_continue = false;
 		move_th.join();
 	}
-	digitalWrite(DIR_0,0);
-	digitalWrite(DIR_1,0);
-	digitalWrite(PULSE,0);
+	digitalWrite(L_PULSE, 0);
+	digitalWrite(L_DIR, 0);
+	digitalWrite(R_PULSE, 0);
+	digitalWrite(R_DIR, 0);
 	digitalWrite(SIG_SHOOT, 0);
 	digitalWrite(SIG_FORCE, 0);
 }
 
 void robomove::Fwd(double distance){
-	std::cout<<"fwd"<<std::endl;
 	dir = M_FWD;
 	pulse_num = MmToPulse(distance);
-	std::cout<<pulse_num<<std::endl;
 	move_update = true;
 }
 
@@ -271,6 +130,9 @@ void robomove::Stop(void){
 }
 
 bool robomove::ChkState(void){
+	if(move_update == true){
+		return false;
+	}
 	return move_finished;
 }
 
@@ -286,35 +148,33 @@ void robomove::Th_end(void){
 }
 
 long robomove::MmToPulse(double distance){
-	//進みに対してどれくらいのパルスが必要か計算
-	long num;
-	num = distance / one_move;
-	double tmp = distance / one_move;
-	double reminder;
-	reminder = tmp - num;
-//	std::cout << "function" << std::endl;
-//	std::cout << "num=" << num <<", tmp=" << tmp << std::endl;
-	if(reminder < 0.5) {
-		return num;
-	}
-	else {
-		return num + 1;
-	}
+	/*
+	タイヤの直径58mm
+	円周：182.12mm
+	1パルスあたり182.12/360*1.8=0.9106mm
+	*/
+	const double dirPerPulse=58.*M_PI/360.*1.8;
+	// std::cout<<dirPerPulse<<std::endl;
+	// std::cout<<"pulse:"<<(distance/dirPerPulse)<<std::endl;
+	// std::cout<<"pulse:"<<round(distance/dirPerPulse)<<std::endl;
+	return round(distance/dirPerPulse);
 }
 
 long robomove::AngleToPulse(double angle){
-	//回転に対してどれくらいのパルスが必要か計算
-	long num;
-	num = angle / one_turn;
-	double tmp = angle / one_turn;
-	double reminder;
-	reminder = tmp - num;
-	if(reminder < 0.5) {
-		return num;
-	}
-	else {
-		return num + 1;
-	}
+	//回転角=トレッド(タイヤ間の距離)/タイヤの直径*角度？
+	//210/58=3.620
+	//90度旋回=3.620*90=325度
+	//232/1.8=128.88
+	//232/0.45=
+	/* 1パルス1.8度
+	1回転→200パルス
+	実測→200パルスで90度
+	*/
+	const double anglePerPulse=210./58./1.8;
+	// std::cout<<anglePerPulse<<std::endl;
+	// std::cout<<"pulse:"<<(anglePerPulse*angle)<<std::endl;
+	// std::cout<<"cast_pulse:"<<round(anglePerPulse*angle)<<std::endl;
+	return round(anglePerPulse*angle);
 }
 
 void robomove::Run(void){
@@ -328,46 +188,41 @@ void robomove::Run(void){
 			move_finished = false;
 			switch(dir){
 				case M_FWD:
-					std::cout<<"fwd move in thread"<<std::endl;
-					digitalWrite(DIR_0, 0);
-					digitalWrite(DIR_1, 0);
+					digitalWrite(R_DIR, 0);
+					digitalWrite(L_DIR, 0);
 					break;
 				case M_REV:
-					digitalWrite(DIR_0, 1);
-					digitalWrite(DIR_1, 1);
+					digitalWrite(R_DIR, 1);
+					digitalWrite(L_DIR, 1);
 					break;
 				case M_RIGHT:
-					digitalWrite(DIR_0, 1);
-					digitalWrite(DIR_1, 0);
+					digitalWrite(R_DIR, 1);
+					digitalWrite(L_DIR, 0);
 					break;
 				case M_LEFT:
-					digitalWrite(DIR_0, 0);
-					digitalWrite(DIR_1, 1);
+					digitalWrite(R_DIR, 0);
+					digitalWrite(L_DIR, 1);
 					break;
 				default:
-					digitalWrite(DIR_0, 0);
-					digitalWrite(DIR_1, 0);
+					digitalWrite(R_DIR, 0);
+					digitalWrite(L_DIR, 0);
 					break;
 			}
 		}
-		//旧版のPICに合わせているので、いずれパルスに応じて要修正
 		//移動中
 		if(move_finished == false){
-			digitalWrite(PULSE, 1);
-			//COMPLETEまで待機
-			while(digitalRead(COMPLETE) == 0){
-				std::cout<<"wait..."<<std::endl;
-			}
-			//PULSEを下げる
-			digitalWrite(PULSE, 0);
+			digitalWrite(R_PULSE,1);
+			digitalWrite(L_PULSE,1);
+			delay(4);
 			now_pulse_num++;
-			std::cout<<now_pulse_num<<std::endl;
 			if(now_pulse_num == pulse_num){
-				std::cout<<now_pulse_num<<std::endl;
 				move_finished = true;
 			}
 		}
-		// delay(10);
+		//PULSEを下げる
+		digitalWrite(R_PULSE,0);
+		digitalWrite(L_PULSE,0);
+		delay(4);
 	}
 	std::cout << "move thread finished" << std::endl;
 }

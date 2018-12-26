@@ -4,10 +4,10 @@
 #include "class.h"
 
 // ピン番号を定義
-#define R_PULSE 16
-#define R_DIR 12
-#define L_PULSE 21
-#define L_DIR 20
+// #define R_PULSE 16
+// #define R_DIR 12
+// #define L_PULSE 21
+// #define L_DIR 20
 
 const int X_max = 600;
 const int Y_max = 600;

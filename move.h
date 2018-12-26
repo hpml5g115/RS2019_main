@@ -3,13 +3,10 @@
 
 #include <thread>
 
-//昔の配置
-//PIC中心部より12,16,20,21
-//昔のバージョンなので確認次第削除
-#define DIR_0 26
-#define DIR_1 19
-#define PULSE 13
-#define COMPLETE 6
+const int L_PULSE = 26;
+const int L_DIR = 19;
+const int R_PULSE = 13;
+const int R_DIR = 6;
 
 //サーボ系PICの接続
 #define SIG_CAP 20
@@ -33,29 +30,12 @@ void sigcatch(int sig);
 //シグナルハンドラーの初期化
 void Sig_Initialize(void);
 
-/*
-void Exit_pin(void);
-
-//ステッピングモーターの移動制御
-void fwd(double length);
-void rev(double length);
-void right(double angle);
-void left(double angle);
-
-//四捨五入用関数
-int move_conv(double value);
-int turn_conv(double value);
-*/
-
 //サーボ関連
 bool BallCaptured(void);
 void BallShoot(void);
 
 //強制回収
 bool ForceCapture(void);
-
-//動作命令の関数
-// void moving(double distance, double angle);
 
 //新版　マルチスレッド化によりパルス出しっぱなしにする
 class robomove{
