@@ -58,7 +58,6 @@ private:
   std::thread move_th;
   bool thread_continue;
   bool move_finished;
-  bool move_abort;
   int dir;
   long pulse_num;
 

@@ -126,7 +126,9 @@ void robomove::Left(double angle){
 }
 
 void robomove::Stop(void){
-	move_abort = false;
+	dir = M_STOP;
+	pulse_num = 0;
+	move_update = true;
 }
 
 bool robomove::ChkState(void){
@@ -204,11 +206,14 @@ void robomove::Run(void){
 					digitalWrite(L_DIR, 1);
 					break;
 				default:
+					//動作を中断
+					move_finished = true;
 					digitalWrite(R_DIR, 0);
 					digitalWrite(L_DIR, 0);
 					break;
 			}
 		}
+
 		//移動中
 		if(move_finished == false){
 			digitalWrite(R_PULSE, 1);
