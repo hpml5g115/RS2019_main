@@ -13,8 +13,8 @@ const int R_DIR = 6;
 #define SIG_SHOOT 16
 #define SIG_FORCE 12
 
-const double one_move = 55;
-const double one_turn = 6.0;
+const double dirPerPulse = 58. * M_PI / 360. * 1.8;
+const double anglePerPulse = 210. / 58. / 1.8;
 
 const int M_STOP = 0;
 const int M_FWD = 1;

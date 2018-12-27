@@ -155,7 +155,7 @@ long robomove::MmToPulse(double distance){
 	円周：182.12mm
 	1パルスあたり182.12/360*1.8=0.9106mm
 	*/
-	const double dirPerPulse = 58. * M_PI / 360. * 1.8;
+	// const double dirPerPulse = 58. * M_PI / 360. * 1.8;
 	// std::cout<<dirPerPulse<<std::endl;
 	// std::cout<<"pulse:"<<(distance/dirPerPulse)<<std::endl;
 	// std::cout<<"pulse:"<<round(distance/dirPerPulse)<<std::endl;
@@ -172,7 +172,7 @@ long robomove::AngleToPulse(double angle){
 	1回転→200パルス
 	実測→200パルスで90度
 	*/
-	const double anglePerPulse = 210. / 58. / 1.8;
+	// const double anglePerPulse = 210. / 58. / 1.8;
 	// std::cout<<anglePerPulse<<std::endl;
 	// std::cout<<"pulse:"<<(anglePerPulse*angle)<<std::endl;
 	// std::cout<<"cast_pulse:"<<round(anglePerPulse*angle)<<std::endl;
