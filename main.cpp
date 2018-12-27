@@ -10,6 +10,7 @@
 #include <iostream>
 //#include <fstream>
 #include <cmath>
+#include <algorithm>
 //#include <wiringPi.h>
 //#include <softPwm.h>
 //#include <signal.h>
@@ -42,7 +43,8 @@ int main(void) {
 	}
 
 	Sig_Initialize();
-	Pin_Initialize();
+	robomove mov;
+	mov.Th_start();
 
 	if (Initialize(drv) == false) {
 		ExitProcess(drv);
@@ -158,7 +160,7 @@ int main(void) {
 	    		//移動距離を微調整
 	    		dest_r -= 50;
 
-	            moving(dest_r, dest_theta);
+				mov.ConvertToMove(dest_r, dest_theta);
 				/*
 				if(dest_theta < 0){
 					goal_angle -= dest_theta;
@@ -223,11 +225,9 @@ int main(void) {
 
 	            line_count = ClassifyGroup(gr, gr_num);
 
-                const int turn_lim = 4;
                 if(line_count == 0){
                     right(45);
                 }
-
 	        }
 
 	/*			if(dest_theta < 0){
@@ -252,26 +252,30 @@ int main(void) {
 		}
 
 	    double max_x,min_x,max_y,min_y;
-		max_x = gr[line_num].x[0];
-		min_x = gr[line_num].x[0];
-		max_y = gr[line_num].y[0];
-		min_y = gr[line_num].y[0];
 
 		//最大値・最小値を探す
-		for(int i = 0; i < gr[line_num].count; i++) {
-			if(max_x < gr[line_num].x[i]) {
-				max_x = gr[line_num].x[i];
-			}
-			if(min_x > gr[line_num].x[i]) {
-				min_x = gr[line_num].x[i];
-			}
-			if(max_y < gr[line_num].y[i]) {
-				max_y = gr[line_num].y[i];
-			}
-			if(min_y > gr[line_num].y[i]) {
-				min_y = gr[line_num].y[i];
-			}
-		}
+		// max_x = gr[line_num].x[0];
+		// min_x = gr[line_num].x[0];
+		// max_y = gr[line_num].y[0];
+		// min_y = gr[line_num].y[0];
+		// for(int i = 0; i < gr[line_num].count; i++) {
+		// 	if(max_x < gr[line_num].x[i]) {
+		// 		max_x = gr[line_num].x[i];
+		// 	}
+		// 	if(min_x > gr[line_num].x[i]) {
+		// 		min_x = gr[line_num].x[i];
+		// 	}
+		// 	if(max_y < gr[line_num].y[i]) {
+		// 		max_y = gr[line_num].y[i];
+		// 	}
+		// 	if(min_y > gr[line_num].y[i]) {
+		// 		min_y = gr[line_num].y[i];
+		// 	}
+		// }
+		max_x = *std::max_element(gr[line_num].x.begin(), gr[line_num].x.end());
+		min_x = *std::min_element(gr[line_num].x.begin(), gr[line_num].x.end());
+		max_y = *std::max_element(gr[line_num].y.begin(), gr[line_num].y.end());
+		min_y = *std::max_element(gr[line_num].y.begin(), gr[line_num].y.end());
 
 		double abs_x,abs_y;
 		abs_x = fabs(max_x - min_x);
@@ -322,8 +326,8 @@ int main(void) {
 		std::cout << "dest_x=" << dest_x << ", dest_y=" << dest_y << "\n";
 		std::cout << "dest_r=" << dest_r << ", dest_theta=" << dest_theta << std::endl;
 
-	    moving(dest_r, dest_theta);
-	    delay(1000);
+		mov.ConvertToMove(dest_r, dest_theta);
+		delay(1000);
 
 	    BallShoot();
         std::cout << "shoot completed.\n" << std::endl;
@@ -331,7 +335,8 @@ int main(void) {
 		rev(1000);
 	}
 	ExitProcess(drv);
-	Exit_pin();
+	
+	// Exit_pin();
 
 	return 0;
 }

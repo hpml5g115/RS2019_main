@@ -131,6 +131,20 @@ void robomove::Stop(void){
 	move_update = true;
 }
 
+void robomove::ConvertToMove(double distance, double angle){
+	if(angle<0.){
+		double abs_angle = abs(angle);
+		Right(abs_angle);
+	}
+	else{
+		double abs_angle = abs(angle);
+		Left(abs_angle);
+	}
+	//旋回完了まで待機
+	while(move_finished==false);
+	Fwd(distance);
+}
+
 bool robomove::ChkState(void){
 	if(move_update == true){
 		return false;

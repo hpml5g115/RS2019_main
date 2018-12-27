@@ -48,6 +48,7 @@ public:
     void Right(double angle);
     void Left(double angle);
     void Stop(void);
+    void ConvertToMove(double distance, double angle);
     bool ChkState(void);
 
     void Th_start(void);
