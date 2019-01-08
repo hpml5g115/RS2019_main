@@ -18,7 +18,7 @@
 #include "rplidar.h" //RPLIDAR standard sdk, all-in-one header
 
 //GUIなしで実行
-#define _NO_GUI
+// #define _NO_GUI
 
 #ifndef _NO_GUI
 	#include <opencv2/core/core.hpp>
@@ -33,18 +33,17 @@
 
 
 int main(void) {
-	RPlidarDriver * drv = RPlidarDriver::CreateDriver(RPlidarDriver::DRIVER_TYPE_SERIALPORT);
+	Sig_Initialize();
+	robomove mov;
+	mov.Th_start();
 
+	RPlidarDriver * drv = RPlidarDriver::CreateDriver(RPlidarDriver::DRIVER_TYPE_SERIALPORT);
 	//double goal_angle = 90;
 
 	if (!drv) {
 		printf("insufficent memory, exit\n");
 		exit(-2);
 	}
-
-	Sig_Initialize();
-	robomove mov;
-	mov.Th_start();
 
 	if (Initialize(drv) == false) {
 		ExitProcess(drv);
@@ -66,6 +65,10 @@ int main(void) {
     dest_y = 0;
     dest_r = 0;
     dest_theta = 0;
+
+#ifndef _NO_GUI
+	cv::namedWindow("group_image", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
+#endif
 
 	drv->startMotor();
 
@@ -110,6 +113,35 @@ int main(void) {
 
 
 	    		line_count = ClassifyGroup(gr, gr_num);
+
+#ifndef _NO_GUI
+				cv::Mat group_img = cv::Mat::zeros(X_max, Y_max, CV_8UC3);
+				group_img = cv::Scalar(0, 0, 0);
+	    		PictureGrid(group_img);
+	    		std::stringstream con_str;
+	    		con_str << "Object" << gr_num;
+	    		std::string str =con_str.str();
+	    		con_str << " Lines" <<line_count;
+	    		str = con_str.str();
+
+	    		cv::putText(group_img, str, cv::Point(0, 30), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(255, 255, 255), 2, CV_AA);
+	    		for (int pos = 0; pos < gr_num; pos++) {
+	    			if (gr[pos].line == false) {
+	    				for (int i = 0; i < gr[pos].count; i++) {
+	    					int xr, yr;
+	    					GraphGain(gr[pos].x[i], gr[pos].y[i], &xr, &yr);
+	    					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
+	    				}
+	    			}
+	    			else {
+	    				for (int i = 0; i < gr[pos].count; i++) {
+	    					int xr, yr;
+	    					GraphGain(gr[pos].x[i], gr[pos].y[i], &xr, &yr);
+	    					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(0, 0, 255), -1, 8);
+	    				}
+	    			}
+	    		}
+#endif
 
 	    		int min_gr = 0;
 /*
@@ -159,6 +191,17 @@ int main(void) {
 
 	    		//移動距離を微調整
 	    		dest_r -= 50;
+				
+#ifndef _NO_GUI
+	    		int dest_xr, dest_yr;
+	    		GraphGain(dest_x, dest_y, &dest_xr, &dest_yr);
+	    		cv::circle(group_img, cv::Point(dest_xr, dest_yr), 3, cv::Scalar(0, 255, 0), -1, 8);
+				cv::imshow("group_image",group_img);
+				cv::waitKey(0);
+				//目的地→緑
+				//Line→赤
+				//それ以外→青
+#endif
 
 				mov.ConvertToMove(dest_r, dest_theta);
 				/*
@@ -195,10 +238,14 @@ int main(void) {
 	        }
 			if(rev_count > 2){
 				rev_count = 0;
-				rev(200);
+				// rev(200);
+				mov.Rev(200);
+				while(mov.ChkState()==false);
 			}
 	    }while(continue_flag == 1);
-		rev(300);
+		// rev(300);
+		mov.Rev(300);
+		while(mov.ChkState()==false);		
 
 
         current_result.erase();
@@ -226,7 +273,9 @@ int main(void) {
 	            line_count = ClassifyGroup(gr, gr_num);
 
                 if(line_count == 0){
-                    right(45);
+                    // right(45);
+					mov.Right(45);
+					while(mov.ChkState()==false);
                 }
 	        }
 
@@ -332,7 +381,9 @@ int main(void) {
 	    BallShoot();
         std::cout << "shoot completed.\n" << std::endl;
 		delay(1000);
-		rev(1000);
+		// rev(1000);
+		mov.Rev(1000);
+		while(mov.ChkState()==false);
 	}
 	ExitProcess(drv);
 	

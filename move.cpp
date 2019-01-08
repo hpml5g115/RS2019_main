@@ -61,8 +61,7 @@ bool ForceCapture(void){
 robomove::robomove(){
 	move_update = false;
 	thread_continue = false;
-	move_finished = false;
-	move_abort = false;
+	move_finished = true;
 	dir = M_STOP;
 	pulse_num = 0;
 	if(wiringPiSetupGpio() == -1){
@@ -85,7 +84,7 @@ robomove::robomove(){
 	digitalWrite(R_DIR, 0);
 	digitalWrite(SIG_SHOOT, 0);
 	digitalWrite(SIG_FORCE, 0);
-	std::cout << "setup finished." << std::endl;
+	std::cout << "GPIO setup finished." << std::endl;
 }
 
 robomove::~robomove(){
@@ -143,6 +142,8 @@ void robomove::ConvertToMove(double distance, double angle){
 	//旋回完了まで待機
 	while(move_finished==false);
 	Fwd(distance);
+	//とりあえず待機状態にしておく
+	while(move_finished==false);
 }
 
 bool robomove::ChkState(void){
