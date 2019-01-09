@@ -39,6 +39,11 @@ void measure::add(const measure &next_data){
 	}
 }
 
+void measure::sort(void){
+	//https://codezine.jp/article/detail/6020
+	std::sort(data.begin(), data.end(), [](const rp_datas &x, const rp_datas &y) { return x.deg < y.deg; });
+}
+
 void group::size_in(void) {
 	count = data.size();
 }

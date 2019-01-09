@@ -27,6 +27,7 @@ public:
   void size_in(void);
 //   void erase(void);
   void add(const measure &next_data);
+  void sort(void);
 };
 
 //グループ化
