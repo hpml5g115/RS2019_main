@@ -96,6 +96,7 @@ int main(void) {
 				}
 				//最初のデータに追加
 				current_result.add(tmp);
+				current_result.sort();
 
 				//リセット
 	            continue_flag = 0;
