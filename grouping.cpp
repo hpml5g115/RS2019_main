@@ -5,6 +5,7 @@
 #include <iostream>
 //#include <fstream>
 #include <cmath>
+#include <algorithm>
 
 //#include "myfunc.h"
 #include "grouping.h"
@@ -13,12 +14,8 @@
 //ゼロの点を除去
 void ZeroRemove(measure *result, measure *reduce){
     for (int pos = 0; pos < result->count; pos++) {
-        if (result->distance[pos] != 0) {
-            reduce->deg.push_back(result->deg[pos]);
-            reduce->distance.push_back(result->distance[pos]);
-            reduce->x.push_back(result->x[pos]);
-            reduce->y.push_back(result->y[pos]);
-
+        if (result->data[pos].distance != 0) {
+            reduce->data.push_back(result->data[pos]);
         }
     }
     reduce->size_in();
@@ -29,14 +26,11 @@ int MakeGroup(measure *result, group gr[50]){
     for (int pos = 0; pos < result->count - 1; ++pos) {
         double tmp_x = 0;
         double tmp_y = 0;
-        tmp_x = fabs(result->x[pos] - result->x[pos + 1]);
-        tmp_y = fabs(result->y[pos] - result->y[pos + 1]);
+        tmp_x = fabs(result->data[pos].x - result->data[pos + 1].x);
+        tmp_y = fabs(result->data[pos].y - result->data[pos + 1].y);
 
         if(tmp_x < group_lim && tmp_y < group_lim) {
-            gr[num].deg.push_back(result->deg[pos]);
-            gr[num].distance.push_back(result->distance[pos]);
-            gr[num].x.push_back(result->x[pos]);
-            gr[num].y.push_back(result->y[pos]);
+            gr[num].data.push_back(result->data[pos]);
         }
         else {
             //3点より少ないものは無視
@@ -65,41 +59,42 @@ int MakeGroup(measure *result, group gr[50]){
 void Connect(group *first, group *last){
     double tmp_x = 0;
     double tmp_y = 0;
-    tmp_x = fabs(first->x[0] - last->x[last->count -1]);
-    tmp_y = fabs(first->y[0] - last->y[last->count -1]);
+    tmp_x = fabs(first->data[0].x - last->data[last->count - 1].x);
+    tmp_y = fabs(first->data[0].y - last->data[last->count - 1].y);
 
     if(tmp_x < group_lim && tmp_y < group_lim) {
         for(int i = 0; i < last->count;i++){
-            first->deg.push_back(last->deg[i]);
-            first->distance.push_back(last->distance[i]);
-            first->x.push_back(last->x[i]);
-            first->y.push_back(last->y[i]);
+            first->data.push_back(last->data[i]);
         }
     }
 }
 
 double GroupLength(group *gr){
     double max_x,min_x,max_y,min_y;
-    max_x = gr->x[0];
-    min_x = gr->x[0];
-    max_y = gr->y[0];
-    min_y = gr->y[0];
+    // max_x = gr->x[0];
+    // min_x = gr->x[0];
+    // max_y = gr->y[0];
+    // min_y = gr->y[0];
 
-    //最大値・最小値を探す
-    for(int i = 0; i < gr->count; i++) {
-        if(max_x < gr->x[i]) {
-            max_x = gr->x[i];
-        }
-        if(min_x > gr->x[i]) {
-            min_x = gr->x[i];
-        }
-        if(max_y < gr->y[i]) {
-            max_y = gr->y[i];
-        }
-        if(min_y > gr->y[i]) {
-            min_y = gr->y[i];
-        }
-    }
+    // //最大値・最小値を探す
+    // for(int i = 0; i < gr->count; i++) {
+    //     if(max_x < gr->x[i]) {
+    //         max_x = gr->x[i];
+    //     }
+    //     if(min_x > gr->x[i]) {
+    //         min_x = gr->x[i];
+    //     }
+    //     if(max_y < gr->y[i]) {
+    //         max_y = gr->y[i];
+    //     }
+    //     if(min_y > gr->y[i]) {
+    //         min_y = gr->y[i];
+    //     }
+    // }
+    max_x = gr->max_x();
+    min_x = gr->min_x();
+    max_y = gr->max_y();
+    min_y = gr->min_y();
 
     double abs_x,abs_y;
     abs_x = fabs(max_x - min_x);
@@ -108,21 +103,21 @@ double GroupLength(group *gr){
     double length;
     if(abs_x > abs_y) {
         for(int i = 0; i < gr->count; i++) {
-            if(gr->x[i] == max_x) {
-                max_y = gr->y[i];
+            if(gr->data[i].x == max_x) {
+                max_y = gr->data[i].y;
             }
-            if(gr->x[i] == min_x){
-                min_y = gr->y[i];
+            if(gr->data[i].x == min_x){
+                min_y = gr->data[i].y;
             }
         }
     }
     else {
         for(int i = 0; i < gr->count; i++) {
-            if(gr->y[i] == max_y) {
-                max_x = gr->x[i];
+            if(gr->data[i].y == max_y) {
+                max_x = gr->data[i].x;
             }
-            if(gr->y[i] == min_y){
-                min_x = gr->x[i];
+            if(gr->data[i].y == min_y){
+                min_x = gr->data[i].x;
             }
         }
     }

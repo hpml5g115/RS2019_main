@@ -5,9 +5,9 @@
 //#include <iostream>
 //#include <fstream>
 #include <cmath>
-#include <wiringPi.h>
-#include <softPwm.h>
-#include <signal.h>
+// #include <wiringPi.h>
+// #include <softPwm.h>
+// #include <signal.h>
 
 #include "rplidar.h" //RPLIDAR standard sdk, all-in-one header
 
@@ -16,6 +16,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "myfunc.h"
+#include "class.h"
 
 
 void GraphGain(double x, double y, int *xr, int *yr) {
@@ -131,8 +132,12 @@ bool FinderMeasure(RPlidarDriver * drv, measure * result) {
 
 		//データ取得
 		for (int pos = 0; pos < count; ++pos) {
-			result->deg.push_back((nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f);
-			result->distance.push_back(nodes[pos].distance_q2 / 4.0f);
+			rp_datas dt;
+			dt.deg = (nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f;
+			dt.distance = nodes[pos].distance_q2 / 4.0f;
+			result->data.push_back(dt);
+			// result->deg.push_back((nodes[pos].angle_q6_checkbit >> RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT) / 64.0f);
+			// result->distance.push_back(nodes[pos].distance_q2 / 4.0f);
 		}
 		result->size_in();
 		return true;

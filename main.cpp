@@ -137,14 +137,14 @@ int main(void) {
 	    			if (gr[pos].line == false) {
 	    				for (int i = 0; i < gr[pos].count; i++) {
 	    					int xr, yr;
-	    					GraphGain(gr[pos].x[i], gr[pos].y[i], &xr, &yr);
-	    					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
+							GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
+							cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
 	    				}
 	    			}
 	    			else {
 	    				for (int i = 0; i < gr[pos].count; i++) {
 	    					int xr, yr;
-	    					GraphGain(gr[pos].x[i], gr[pos].y[i], &xr, &yr);
+							GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
 	    					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(0, 0, 255), -1, 8);
 	    				}
 	    			}
@@ -170,7 +170,7 @@ int main(void) {
 						*/
 		    			//距離の平均値が一番近い物体を検知する
 		    			//if(gr[pos].line == false && gr[pos].distance[0] < gr[min_gr].distance[0]) {
-						if(gr[pos].distance[0] < gr[min_gr].distance[0]){
+						if(gr[pos].data[0].distance < gr[min_gr].data[0].distance){
 		        		//if(ave < min_gr_ave){
 							//min_gr_ave = ave;
 							min_gr = pos;
@@ -179,8 +179,8 @@ int main(void) {
 	    		}
 
 				for(int i = 0; i < gr[min_gr].count;i++){
-					dest_x += gr[min_gr].x[i];
-					dest_y += gr[min_gr].y[i];
+					dest_x += gr[min_gr].data[i].x;
+					dest_y += gr[min_gr].data[i].y;
 				}
 				dest_x = dest_x / gr[min_gr].count;
 				dest_y = dest_y / gr[min_gr].count;
@@ -331,10 +331,14 @@ int main(void) {
 		// 		min_y = gr[line_num].y[i];
 		// 	}
 		// }
-		max_x = *std::max_element(gr[line_num].x.begin(), gr[line_num].x.end());
-		min_x = *std::min_element(gr[line_num].x.begin(), gr[line_num].x.end());
-		max_y = *std::max_element(gr[line_num].y.begin(), gr[line_num].y.end());
-		min_y = *std::max_element(gr[line_num].y.begin(), gr[line_num].y.end());
+		// max_x = *std::max_element(gr[line_num].x.begin(), gr[line_num].x.end());
+		// min_x = *std::min_element(gr[line_num].x.begin(), gr[line_num].x.end());
+		// max_y = *std::max_element(gr[line_num].y.begin(), gr[line_num].y.end());
+		// min_y = *std::max_element(gr[line_num].y.begin(), gr[line_num].y.end());
+		max_x = gr[line_num].max_x();
+		min_x = gr[line_num].min_x();
+		max_y = gr[line_num].max_y();
+		min_y = gr[line_num].min_y();
 
 		double abs_x,abs_y;
 		abs_x = fabs(max_x - min_x);
