@@ -80,16 +80,24 @@ int main(void) {
 		ExitProcess(drv);
 		return 0;
 	}
-	//リセット
-	measure current_result;
 
     //ボール検知→回収
     int continue_flag = 1;
 	while(1){
 		int rev_count = 0;
 	    do{
-	    	if (FinderMeasure(drv, &current_result) == true) {
-	            //リセット
+			//リセット
+			measure current_result;
+			if (FinderMeasure(drv, &current_result) == true){
+				//2回測定する
+				measure tmp;
+				while(FinderMeasure(drv, &tmp == false){
+					std::cout << "wait for RPLIDAR measuring..." << std::endl;
+				}
+				//最初のデータに追加
+				current_result.add(tmp);
+
+				//リセット
 	            continue_flag = 0;
 				//初期化
 				for(int pos = 0; pos < gr_num;pos++){
@@ -248,9 +256,11 @@ int main(void) {
 		while(mov.ChkState()==false);		
 
 
-        current_result.erase();
+        // current_result.erase();
 	    //回収→ゴール
 	    do{
+			//リセット
+			measure current_result;
 	        if (FinderMeasure(drv, &current_result) == true) {
 				//リセット
 	            //初期化

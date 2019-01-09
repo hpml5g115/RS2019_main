@@ -14,18 +14,25 @@ void measure::size_in(void) {
 	count = deg.size();
 }
 
-void group::size_in(void) {
-	count = deg.size();
-}
-
-void group::erase(void) {
+void measure::erase(void) {
 	deg.clear();
 	distance.clear();
 	x.clear();
 	y.clear();
 }
 
-void measure::erase(void) {
+void measure::add(const measure &data){
+	for (int i = 0; i < data.count;i++){
+		deg.push_back(data.deg[i]);
+		distance.push_back(data.distance[i]);
+	}
+}
+
+void group::size_in(void) {
+	count = deg.size();
+}
+
+void group::erase(void) {
 	deg.clear();
 	distance.clear();
 	x.clear();

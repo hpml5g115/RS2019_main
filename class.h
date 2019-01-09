@@ -17,6 +17,7 @@ public:
 	void convert(void);
 	void size_in(void);
 	void erase(void);
+	void add(const measure &data);
 };
 
 //グループ化
