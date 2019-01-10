@@ -60,11 +60,6 @@ int main(void) {
     group gr[50];
     int gr_num = 0;
     int line_count = 0;
-    double dest_x, dest_y, dest_r, dest_theta;
-    dest_x = 0;
-    dest_y = 0;
-    dest_r = 0;
-    dest_theta = 0;
 
 #ifndef _NO_GUI
 	cv::namedWindow("group_image", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
@@ -85,7 +80,9 @@ int main(void) {
     int continue_flag = 1;
 	while(1){
 		int rev_count = 0;
+		std::cout<<"------ball capture phase-------"<<std::endl;
 	    do{
+			mov.BallDetect();
 			//リセット
 			measure current_result;
 			if (FinderMeasure(drv, &current_result) == true){
@@ -106,10 +103,6 @@ int main(void) {
 				}
 				gr_num = 0;
 	            line_count = 0;
-				dest_x = 0;
-				dest_y = 0;
-				dest_r = 0;
-				dest_theta = 0;
 	    		//座標変換
 	    		current_result.convert();
 
@@ -151,56 +144,51 @@ int main(void) {
 	    			}
 	    		}
 #endif
-
 	    		int min_gr = 0;
-/*
-				double min_gr_ave = 0;
-				for(int i = 0; i < gr[min_gr].count; i++){
-					min_gr_ave = gr[min_gr].distance[i];
-				}
-				min_gr_ave = min_gr_ave / gr[min_gr].count;
-*/
+				bool ball_found = false;
 	    		for(int pos = 1;pos < gr_num;pos++){
 					if(gr[pos].line != true){
-						/*
-						double ave;
-						for(int i = 0; i < gr[pos].count; i++){
-							ave += gr[pos].distance[i];
-						}
-						ave = ave / gr[pos].count;
-						*/
+						ball_found = true;
 		    			//距離の平均値が一番近い物体を検知する
-		    			//if(gr[pos].line == false && gr[pos].distance[0] < gr[min_gr].distance[0]) {
 						if(gr[pos].data[0].distance < gr[min_gr].data[0].distance){
-		        		//if(ave < min_gr_ave){
-							//min_gr_ave = ave;
 							min_gr = pos;
 		                }
 					}
 	    		}
+				double dest_x, dest_y, dest_r, dest_theta;
+				dest_x = 0.;
+				dest_y = 0.;
+				dest_r = 0.;
+				dest_theta = 0.;
+				//ボールが見つからなかったとき
+				if(ball_found == true){
+					for(int i = 0; i < gr[min_gr].count;i++){
+						dest_x += gr[min_gr].data[i].x;
+						dest_y += gr[min_gr].data[i].y;
+					}
+					dest_x = dest_x / gr[min_gr].count;
+					dest_y = dest_y / gr[min_gr].count;
 
-				for(int i = 0; i < gr[min_gr].count;i++){
-					dest_x += gr[min_gr].data[i].x;
-					dest_y += gr[min_gr].data[i].y;
+
+					//dest_x = (gr[min_gr].x[0] + gr[min_gr].x[gr[min_gr].count - 1]) / 2.0;
+					//dest_y = (gr[min_gr].y[0] + gr[min_gr].y[gr[min_gr].count - 1]) / 2.0;
+					dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
+					dest_theta = atan2(dest_y, dest_x);
+					//radをdegに変換
+					dest_theta = dest_theta * 180 / M_PI;
+
+					//デバッグ用
+					std::cout << "dest_x=" << dest_x << ", dest_y=" << dest_y << "\n";
+					std::cout << "dest_r=" << dest_r << ", dest_theta=" << dest_theta << std::endl;
+
+					//移動距離を微調整
+					dest_r -= 50;
 				}
-				dest_x = dest_x / gr[min_gr].count;
-				dest_y = dest_y / gr[min_gr].count;
-
-
-	    		//dest_x = (gr[min_gr].x[0] + gr[min_gr].x[gr[min_gr].count - 1]) / 2.0;
-	    		//dest_y = (gr[min_gr].y[0] + gr[min_gr].y[gr[min_gr].count - 1]) / 2.0;
-	    		dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
-	    		dest_theta = atan2(dest_y, dest_x);
-	    		//radをdegに変換
-	    		dest_theta = dest_theta * 180 / M_PI;
-
-	    		//デバッグ用
-	    		std::cout << "dest_x=" << dest_x << ", dest_y=" << dest_y << "\n";
-	    		std::cout << "dest_r=" << dest_r << ", dest_theta=" << dest_theta << std::endl;
-
-	    		//移動距離を微調整
-	    		dest_r -= 50;
-				
+				else{
+					std::cout << "can't find balls!" << std::endl;
+					dest_r = 100.;
+					dest_theta = 0.;
+				}
 #ifndef _NO_GUI
 	    		int dest_xr, dest_yr;
 	    		GraphGain(dest_x, dest_y, &dest_xr, &dest_yr);
@@ -231,10 +219,15 @@ int main(void) {
 					ball_captured = true;
 					std::cout << "Ball is Captured." << std::endl;
 					rev_count = 0;
+					//持ち上げ
+					mov.LiftUp();
+					while(mov.Busy() == true);
+
+					//debug
 					break;
 				}
 			}
-			if(ball_captured==false){
+			if(ball_captured == false){
 				std::cout << "Ball is missing." << std::endl;
 				//機構が変わったので強制ホールド不可
 				continue_flag = 1;
@@ -244,16 +237,18 @@ int main(void) {
 			if(rev_count > 2){
 				rev_count = 0;
 				// rev(200);
+				delay(500);
 				mov.Rev(200);
-				while(mov.ChkState()==false);
+				while(mov.ChkMoveState() == false);
 			}
 	    }while(continue_flag == 1);
 		// rev(300);
 		mov.Rev(300);
-		while(mov.ChkState()==false);		
+		while(mov.ChkMoveState()==false);		
 
 
         // current_result.erase();
+		std::cout<<"------goal phase-------"<<std::endl;
 	    //回収→ゴール
 	    do{
 			//リセット
@@ -291,7 +286,7 @@ int main(void) {
                 if(line_count == 0){
                     // right(45);
 					mov.Right(45);
-					while(mov.ChkState()==false);
+					while(mov.ChkMoveState()==false);
                 }
 	        }
 
@@ -303,6 +298,35 @@ int main(void) {
 				}
 	*/
 	    }while(line_count == 0);
+
+#ifndef _NO_GUI
+		cv::Mat group_img = cv::Mat::zeros(X_max, Y_max, CV_8UC3);
+		group_img = cv::Scalar(0, 0, 0);
+		PictureGrid(group_img);
+		std::stringstream con_str;
+		con_str << "Object" << gr_num;
+		std::string str =con_str.str();
+		con_str << " Lines" <<line_count;
+		str = con_str.str();
+
+		cv::putText(group_img, str, cv::Point(0, 30), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(255, 255, 255), 2, CV_AA);
+		for (int pos = 0; pos < gr_num; pos++) {
+			if (gr[pos].line == false) {
+				for (int i = 0; i < gr[pos].count; i++) {
+					int xr, yr;
+					GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
+					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
+				}
+			}
+			else {
+				for (int i = 0; i < gr[pos].count; i++) {
+					int xr, yr;
+					GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
+					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(0, 0, 255), -1, 8);
+				}
+			}
+		}
+#endif
 
 		//直線を複数検知した場合
 
@@ -351,6 +375,11 @@ int main(void) {
 		abs_y = fabs(max_y - min_y);
 
 		const double wall_length = 900;
+		double dest_x, dest_y, dest_r, dest_theta;
+		dest_x = 0.;
+		dest_y = 0.;
+		dest_r = 0.;
+		dest_theta = 0.;
 		if(abs_x > abs_y) {
 			dest_x = max_x;
 			for(int i = 0; i < gr[line_num].count; i++) {
@@ -395,8 +424,19 @@ int main(void) {
 		std::cout << "dest_x=" << dest_x << ", dest_y=" << dest_y << "\n";
 		std::cout << "dest_r=" << dest_r << ", dest_theta=" << dest_theta << std::endl;
 
+#ifndef _NO_GUI
+	    		int dest_xr, dest_yr;
+	    		GraphGain(dest_x, dest_y, &dest_xr, &dest_yr);
+	    		cv::circle(group_img, cv::Point(dest_xr, dest_yr), 3, cv::Scalar(0, 255, 0), -1, 8);
+				cv::imshow("group_image",group_img);
+				cv::waitKey(0);
+				//目的地→緑
+				//Line→赤
+				//それ以外→青
+#endif
+
 		mov.ConvertToMove(dest_r, dest_theta);
-		while(move_finished==false);
+		while(mov.ChkMoveState() == false);
 		delay(1000);
 
         //どこかでリフトアップしておかないといけない
@@ -407,7 +447,7 @@ int main(void) {
 		delay(1000);
 		// rev(1000);
 		mov.Rev(1000);
-		while(mov.ChkState()==false);
+		while(mov.ChkMoveState()==false);
 	}
 	ExitProcess(drv);
 	

@@ -112,7 +112,8 @@ void robomove::ConvertToMove(double distance, double angle){
 		Left(abs_angle);
 	}
 	//旋回完了まで待機
-	while(move_finished==false);
+	while(ChkMoveState() == false);
+	// while(move_finished==false);
 	Fwd(distance);
 	//とりあえず待機状態にしておく
 	// while(move_finished==false);
@@ -136,7 +137,7 @@ bool robomove::ChkBallState(void){
 
 bool robomove::Busy(void){
 	int data=digitalRead(EV_BUSY);
-	std::cout<<data<<std::endl;
+	// std::cout<<data<<std::endl;
 	if(data != 0){
 		return true;
 	}
