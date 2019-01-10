@@ -222,31 +222,25 @@ int main(void) {
 				}
 				*/
 	    	}
-	        delay(1000);
-
-	        //ボールを確保したかチェック
-	        if(mov.ChkBallState() == true){
-	            std::cout << "Ball is Captured." <<std::endl;
-				rev_count = 0;
-	        }
-	        else{
-	            std::cout << "Ball is missing." << std::endl;
-                //機構が変わったので強制ホールド不可
-                //何か別の手を考える？
-	            std::cout << "force capture..." << std::endl;
-	            // ForceCapture();
-	            if(mov.ChkBallState() == true){
-	                std::cout << "Ball is Captured." << std::endl;
+	        // delay(1000);
+			bool ball_captured = false;
+			while (mov.ChkMoveState() == false){
+				//ボールを確保したかチェック
+				if (mov.ChkBallState() == true){
+					mov.Stop();
+					ball_captured = true;
+					std::cout << "Ball is Captured." << std::endl;
 					rev_count = 0;
-	            }
-	            else{
-	                std::cout <<"Ball is still missing." << std::endl;
-					BallShoot();
-					delay(500);
-	                continue_flag = 1;
-					rev_count++;
-	            }
-	        }
+					break;
+				}
+			}
+			if(ball_captured==false){
+				std::cout << "Ball is missing." << std::endl;
+				//機構が変わったので強制ホールド不可
+				continue_flag = 1;
+				rev_count++;
+			}
+
 			if(rev_count > 2){
 				rev_count = 0;
 				// rev(200);
@@ -402,6 +396,7 @@ int main(void) {
 		std::cout << "dest_r=" << dest_r << ", dest_theta=" << dest_theta << std::endl;
 
 		mov.ConvertToMove(dest_r, dest_theta);
+		while(move_finished==false);
 		delay(1000);
 
         //どこかでリフトアップしておかないといけない
