@@ -8,10 +8,20 @@ const int L_DIR = 19;
 const int R_PULSE = 13;
 const int R_DIR = 6;
 
+//Arduino 接続ピン
+// const int BALL_STATE = 7;
+// const int EV_BUSY = 1;
+// const int ARDUINO_0 = 25;
+// const int ARDUINO_1 = 8;
+const int BALL_STATE = 16;
+const int EV_BUSY = 12;
+const int ARDUINO_0 = 20;
+const int ARDUINO_1 = 21;
+
 //サーボ系PICの接続
-#define SIG_CAP 20
-#define SIG_SHOOT 16
-#define SIG_FORCE 12
+// #define SIG_CAP 20
+// #define SIG_SHOOT 16
+// #define SIG_FORCE 12
 
 const double dirPerPulse = 58. * M_PI / 360. * 1.8;
 const double anglePerPulse = 210. / 58. / 1.8;
@@ -30,13 +40,6 @@ void sigcatch(int sig);
 //シグナルハンドラーの初期化
 void Sig_Initialize(void);
 
-//サーボ関連
-bool BallCaptured(void);
-void BallShoot(void);
-
-//強制回収
-bool ForceCapture(void);
-
 //新版　マルチスレッド化によりパルス出しっぱなしにする
 class robomove{
 public:
@@ -49,7 +52,13 @@ public:
     void Left(double angle);
     void Stop(void);
     void ConvertToMove(double distance, double angle);
-    bool ChkState(void);
+    bool ChkMoveState(void);
+    bool ChkBallState(void);
+    bool Busy(void);
+    void BallDetect(void);
+    void LiftUp(void);
+    void Shoot(void);
+    void FreeMode(void);
 
     void Th_start(void);
     void Th_end(void);

@@ -12,8 +12,8 @@ void sigcatch(int sig){
 	digitalWrite(L_DIR, 0);
 	digitalWrite(R_PULSE, 0);
 	digitalWrite(R_DIR, 0);
-	digitalWrite(SIG_SHOOT, 0);
-	digitalWrite(SIG_FORCE, 0);
+	digitalWrite(ARDUINO_0, 0);
+	digitalWrite(ARDUINO_1, 0);
   	printf("done.\n");
 
 	exit(1);
@@ -24,37 +24,6 @@ void Sig_Initialize(void){
         printf("failed to set signal handler.\n");
         exit(1);
     }
-}
-
-bool BallCaptured(void){
-	if(digitalRead(SIG_CAP) != 0){
-		return true;
-	}
-	else{
-		return false;
-	}
-}
-
-
-void BallShoot(void){
-	digitalWrite(SIG_SHOOT, 1);
-	delay(1000);
-	digitalWrite(SIG_SHOOT, 0);
-	delay(500);
-}
-
-
-bool ForceCapture(void){
-	digitalWrite(SIG_FORCE, 1);
-	delay(1500);
-	digitalWrite(SIG_FORCE, 0);
-
-	if(digitalRead(SIG_CAP) != 0){
-		return true;
-	}
-	else{
-		return false;
-	}
 }
 
 //新作部分
@@ -74,16 +43,19 @@ robomove::robomove(){
 	pinMode(L_DIR, OUTPUT);
 	pinMode(R_PULSE, OUTPUT);
 	pinMode(L_PULSE, OUTPUT);
-	pinMode(SIG_SHOOT, OUTPUT);
-	pinMode(SIG_CAP, INPUT);
-	pinMode(SIG_FORCE, OUTPUT);
+
+	//Arduinoとの通信
+	pinMode(BALL_STATE, INPUT);
+	pinMode(EV_BUSY, INPUT);
+	pinMode(ARDUINO_0, OUTPUT);
+	pinMode(ARDUINO_1, OUTPUT);
 
 	digitalWrite(L_PULSE, 0);
 	digitalWrite(L_DIR, 0);
 	digitalWrite(R_PULSE, 0);
 	digitalWrite(R_DIR, 0);
-	digitalWrite(SIG_SHOOT, 0);
-	digitalWrite(SIG_FORCE, 0);
+	digitalWrite(ARDUINO_0, 0);
+	digitalWrite(ARDUINO_1, 0);
 	std::cout << "GPIO setup finished." << std::endl;
 }
 
@@ -96,8 +68,8 @@ robomove::~robomove(){
 	digitalWrite(L_DIR, 0);
 	digitalWrite(R_PULSE, 0);
 	digitalWrite(R_DIR, 0);
-	digitalWrite(SIG_SHOOT, 0);
-	digitalWrite(SIG_FORCE, 0);
+	digitalWrite(ARDUINO_0, 0);
+	digitalWrite(ARDUINO_1, 0);
 }
 
 void robomove::Fwd(double distance){
@@ -146,11 +118,53 @@ void robomove::ConvertToMove(double distance, double angle){
 	while(move_finished==false);
 }
 
-bool robomove::ChkState(void){
+bool robomove::ChkMoveState(void){
 	if(move_update == true){
 		return false;
 	}
 	return move_finished;
+}
+
+bool robomove::ChkBallState(void){
+	if(digitalRead(BALL_STATE) != 0){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+bool robomove::Busy(void){
+	int data=digitalRead(EV_BUSY);
+	std::cout<<data<<std::endl;
+	if(data != 0){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+void robomove::BallDetect(void){
+	digitalWrite(ARDUINO_1, 0);
+	digitalWrite(ARDUINO_0, 1);
+}
+
+void robomove::LiftUp(void){
+	digitalWrite(ARDUINO_1, 1);
+	digitalWrite(ARDUINO_0, 0);
+	delay(1000);
+}
+
+void robomove::Shoot(void){
+	digitalWrite(ARDUINO_1, 1);
+	digitalWrite(ARDUINO_0, 1);
+	delay(1000);
+}
+
+void robomove::FreeMode(void){
+	digitalWrite(ARDUINO_0, 0);
+	digitalWrite(ARDUINO_1, 0);
 }
 
 void robomove::Th_start(void){
