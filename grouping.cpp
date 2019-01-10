@@ -28,14 +28,15 @@ int MakeGroup(measure *result, group gr[50]){
         double tmp_y = 0;
         tmp_x = fabs(result->data[pos].x - result->data[pos + 1].x);
         tmp_y = fabs(result->data[pos].y - result->data[pos + 1].y);
-
-        if(tmp_x < group_lim && tmp_y < group_lim) {
+        double tmp_dis=sqrt(tmp_x*tmp_x+tmp_y*tmp_y);
+        // if(tmp_x < group_lim && tmp_y < group_lim) {
+        if(tmp_dis < group_lim) {
             gr[num].data.push_back(result->data[pos]);
         }
         else {
             //3点より少ないものは無視
             gr[num].size_in();
-            if (gr[num].count < 3) {
+            if (gr[num].count < dot_num_lim) {
                 gr[num].erase();
             }
             else {
@@ -46,7 +47,7 @@ int MakeGroup(measure *result, group gr[50]){
 
     gr[num].size_in();
     //3点より少ないものは無視
-    if (gr[num].count < 3) {
+    if (gr[num].count < dot_num_lim) {
         gr[num].erase();
     }
     else {

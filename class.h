@@ -5,14 +5,12 @@
 
 class rp_datas{
 public:
+	rp_datas();
 	double deg;
 	double distance;
 	double x;
 	double y;
 	void convert(void);
-
-private:
-	rp_datas();
 };
 
 class measure {

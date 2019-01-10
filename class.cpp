@@ -2,6 +2,8 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <algorithm>
+#include <iostream>	//debug
+
 #include "class.h"
 
 rp_datas::rp_datas(){
@@ -40,8 +42,16 @@ void measure::add(const measure &next_data){
 }
 
 void measure::sort(void){
+	for(int i=0;i<data.size();i++){
+		std::cout<< data[i].deg<<" ";
+	}
 	//https://codezine.jp/article/detail/6020
 	std::sort(data.begin(), data.end(), [](const rp_datas &x, const rp_datas &y) { return x.deg < y.deg; });
+	std::cout<<"---------------------------"<<std::endl;
+	for(int i=0;i<data.size();i++){
+		std::cout<< data[i].deg<<" ";
+	}
+	std::cout<<std::endl;
 }
 
 void group::size_in(void) {
@@ -49,7 +59,7 @@ void group::size_in(void) {
 }
 
 void group::erase(void) {
-	data.erase();
+	data.clear();
 }
 
 double group::max_x(void){

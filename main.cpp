@@ -91,7 +91,7 @@ int main(void) {
 			if (FinderMeasure(drv, &current_result) == true){
 				//2回測定する
 				measure tmp;
-				while(FinderMeasure(drv, &tmp == false){
+				while(FinderMeasure(drv, &tmp) == false){
 					std::cout << "wait for RPLIDAR measuring..." << std::endl;
 				}
 				//最初のデータに追加
@@ -349,8 +349,8 @@ int main(void) {
 		if(abs_x > abs_y) {
 			dest_x = max_x;
 			for(int i = 0; i < gr[line_num].count; i++) {
-				if(gr[line_num].x[i] == dest_x) {
-					dest_y = gr[line_num].y[i];
+				if(gr[line_num].data[i].x == dest_x) {
+					dest_y = gr[line_num].data[i].y;
 					break;
 				}
 			}
@@ -365,8 +365,8 @@ int main(void) {
 		else {
 			dest_y = max_y;
 			for(int i = 0; i < gr[line_num].count; i++) {
-				if(gr[line_num].y[i] == dest_y) {
-					dest_x = gr[line_num].x[i];
+				if(gr[line_num].data[i].y == dest_y) {
+					dest_x = gr[line_num].data[i].x;
 					break;
 				}
 			}

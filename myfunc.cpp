@@ -123,7 +123,7 @@ bool FinderMeasure(RPlidarDriver * drv, measure * result) {
 	size_t   count = _countof(nodes);
 
 	//データ消去
-	result->erase();
+	// result->erase();
 
 	// fetech extactly one 0-360 degrees' scan
 	ans = drv->grabScanData(nodes, count);

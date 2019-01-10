@@ -5,8 +5,10 @@
 
 //しきい値 [mm]
 const double group_lim = 100.0;
-//グループ内の点の数で判別する
+//グループ内の点の距離で判別する
 const int ball_lim = 200;
+//除外しない最低点の数
+const int dot_num_lim = 5;
 
 
 //ゼロの点を除去
