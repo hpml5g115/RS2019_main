@@ -52,6 +52,7 @@ public:
   double ave_distance(void);
   double ave_x(void);
   double ave_y(void);
+  double min_distance(void);
 };
 
 #endif

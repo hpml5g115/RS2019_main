@@ -32,7 +32,7 @@
 #include "class.h"
 
 // #define _ARM_TEST
-// #define _GOAL_TEST
+#define _GOAL_TEST
 
 #ifdef _ARM_TEST
 int main(void) {
@@ -121,13 +121,6 @@ int main(void) {
 	    		//座標変換
 	    		current_result.convert();
 
-	    		// measure reduce_result;
-	    		// ZeroRemove(&current_result, &reduce_result);
-
-	    		// gr_num = MakeGroup(&reduce_result, gr);
-				// if(gr_num != 0){
-				// 	gr_num = Connect(&gr[0], &gr[gr_num - 1], gr_num);
-				// }
 				gr_num = Grouping(&current_result, gr);
 				int line_count = ClassifyGroup(gr, gr_num);
 				int ball_count = 0;
@@ -253,14 +246,6 @@ int main(void) {
 #endif
 
 				mov.ConvertToMove(dest_r, dest_theta);
-				/*
-				if(dest_theta < 0){
-					goal_angle -= dest_theta;
-				}
-				else{
-					goal_angle += dest_theta;
-				}
-				*/
 	    	}
 	        // delay(1000);
 			bool ball_captured = false;
@@ -288,13 +273,11 @@ int main(void) {
 
 			if(rev_count > 2){
 				rev_count = 0;
-				// rev(200);
 				delay(500);
 				mov.Rev(200);
 				while(mov.ChkMoveState() == false);
 			}
 	    }while(continue_flag == 1);
-		// rev(300);
 		mov.Rev(300);
 		while(mov.ChkMoveState()==false);
 
@@ -304,151 +287,176 @@ int main(void) {
 		std::cout<<"------goal phase-------"<<std::endl;
 		int line_count = 0;
 	    //回収→ゴール
-	    do{
-			//リセット
-			measure current_result;
-			if (MeasureTwice(drv, &current_result) == true){
-	            //初期化
-	            for(int pos = 0; pos < gr_num;pos++){
-	                gr[pos].erase();
-	            }
-	            gr_num = 0;
-	            line_count = 0;
+		//移動した座標を保存
+		std::vector<double> log_r,log_theta;
+		for(int step = 0; step < 3;step++){
+			do{
+				//リセット
+				measure current_result;
+				if (MeasureTwice(drv, &current_result) == true){
+					//初期化
+					for(int pos = 0; pos < gr_num;pos++){
+						gr[pos].erase();
+					}
 
-	            //座標変換
-	            current_result.convert();
+					//座標変換
+					current_result.convert();
 
-	            //ゼロの点を削除
-	            measure reduce_result;
-	            //int reduce_cnt = 0;
-	            ZeroRemove(&current_result, &reduce_result);
+					// gr_num = 0;
+					// line_count = 0;
+					gr_num = Grouping(&current_result, gr);
+					line_count = ClassifyGroup(gr, gr_num);
 
-	            gr_num = MakeGroup(&reduce_result, gr);
-				if(gr_num != 0){
-					gr_num = Connect(&gr[0], &gr[gr_num - 1], gr_num);
+					if(line_count == 0){
+						// right(45);
+						mov.Right(45);
+						while(mov.ChkMoveState()==false);
+					}
 				}
-
-	            line_count = ClassifyGroup(gr, gr_num);
-
-                if(line_count == 0){
-                    // right(45);
-					mov.Right(45);
-					while(mov.ChkMoveState()==false);
-                }
-	        }
-
-	/*			if(dest_theta < 0){
-					goal_angle -= dest_theta;
-				}
-				else{
-					goal_angle += dest_theta;
-				}
-	*/
-	    }while(line_count == 0);
+			}while(line_count == 0);
 
 #ifndef _NO_GUI
-		int ball_count = 0;
-		for (int i = 0; i < gr_num;i++){
-			// std::cout<<std::boolalpha<<gr[i].line<<"   "<<gr[i].ball<<std::endl;
-			if (gr[i].ball == true){
-				ball_count++;
-			}
-		}
-		cv::Mat group_img = cv::Mat::zeros(X_max, Y_max, CV_8UC3);
-		group_img = cv::Scalar(0, 0, 0);
-		PictureGrid(group_img);
-		std::stringstream con_str;
-		con_str << "Object" << gr_num;
-		std::string str =con_str.str();
-		con_str << " Lines" <<line_count;
-		con_str << " Balls" << ball_count;
-		str = con_str.str();
-		cv::putText(group_img, str, cv::Point(0, 30), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(255, 255, 255), 2, CV_AA);
-		for (int pos = 0; pos < gr_num; pos++) {
-			if (gr[pos].line == true) {
-				for (int i = 0; i < gr[pos].count; i++) {
-					int xr, yr;
-					GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
-					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
+			int ball_count = 0;
+			for (int i = 0; i < gr_num;i++){
+				// std::cout<<std::boolalpha<<gr[i].line<<"   "<<gr[i].ball<<std::endl;
+				if (gr[i].ball == true){
+					ball_count++;
 				}
 			}
-			else if (gr[pos].ball == true){
-				for (int i = 0; i < gr[pos].count; i++){
-					int xr, yr;
-					GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
-					//B G R
-					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(211, 0, 148), -1, 8);
+			cv::Mat group_img = cv::Mat::zeros(X_max, Y_max, CV_8UC3);
+			group_img = cv::Scalar(0, 0, 0);
+			PictureGrid(group_img);
+			std::stringstream con_str;
+			con_str << "Object" << gr_num;
+			std::string str =con_str.str();
+			con_str << " Lines" <<line_count;
+			con_str << " Balls" << ball_count;
+			str = con_str.str();
+			cv::putText(group_img, str, cv::Point(0, 30), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(255, 255, 255), 2, CV_AA);
+			for (int pos = 0; pos < gr_num; pos++) {
+				if (gr[pos].line == true) {
+					for (int i = 0; i < gr[pos].count; i++) {
+						int xr, yr;
+						GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
+						cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
+					}
 				}
-			}
-			else {
-				for (int i = 0; i < gr[pos].count; i++) {
-					int xr, yr;
-					GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
-					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(0, 0, 255), -1, 8);
+				else if (gr[pos].ball == true){
+					for (int i = 0; i < gr[pos].count; i++){
+						int xr, yr;
+						GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
+						//B G R
+						cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(211, 0, 148), -1, 8);
+					}
 				}
-			}
-		}
-#endif
-
-	    int line_num = 0;
-		//直線の配列番号を取得
-		bool line_first_update = false;
-		for(int pos = 0; pos < gr_num; pos++) {
-			if(gr[pos].line == true) {
-				if(line_first_update == false){
-					line_num = pos;
-					line_first_update = true;
-					std::cout<<pos<<" "<<GroupLength(&gr[pos])<<std::endl;
-				}
-				else{
-					double max_length = GroupLength(&gr[line_num]);
-					double now_length = GroupLength(&gr[pos]);
-					std::cout<<pos<<" "<<now_length<<std::endl;
-					if(max_length < now_length){
-						line_num = pos;
+				else {
+					for (int i = 0; i < gr[pos].count; i++) {
+						int xr, yr;
+						GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
+						cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(0, 0, 255), -1, 8);
 					}
 				}
 			}
-		}
-		std::cout<<"line_num="<<line_num<<std::endl;
+#endif
 
-		//途中まで移動
-		const double shrink_rate = 0.8;
-		double dest_x, dest_y, dest_r, dest_theta;
-		dest_x = gr[line_num].ave_x() * 0.8;
-		dest_y = gr[line_num].ave_y() * 0.8;
-		dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
-		dest_theta = atan2(dest_y, dest_x);
-		//radをdegに変換
-		dest_theta = dest_theta * 180 / M_PI;
+			int line_num = 0;
+			//直線の配列番号を取得
+			bool line_first_update = false;
+			for(int pos = 0; pos < gr_num; pos++) {
+				if(gr[pos].line == true) {
+					if(line_first_update == false){
+						line_num = pos;
+						line_first_update = true;
+						std::cout<<pos<<" "<<GroupLength(&gr[pos])<<std::endl;
+					}
+					else{
+						double max_length = GroupLength(&gr[line_num]);
+						double now_length = GroupLength(&gr[pos]);
+						std::cout<<pos<<" "<<now_length<<std::endl;
+						if(max_length < now_length){
+							line_num = pos;
+						}
+					}
+				}
+			}
+			std::cout<<"line_num="<<line_num<<std::endl;
 
-		//デバッグ用
-		std::cout << "dest_x=" << dest_x << ", dest_y=" << dest_y << "\n";
-		std::cout << "dest_r=" << dest_r << ", dest_theta=" << dest_theta << std::endl;
+			double dest_x, dest_y, dest_r, dest_theta;
+			dest_x = 0.;
+			dest_y = 0.;
+			dest_r = 0.;
+			dest_theta = 0.;
+			//途中まで移動
+			if(step == 0){
+				const double shrink_rate = 0.5;
+				dest_x = gr[line_num].ave_x() * shrink_rate;
+				dest_y = gr[line_num].ave_y() * shrink_rate;
+				dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
+				dest_theta = atan2(dest_y, dest_x);
+			}
+			else if(step == 1){
+				//長い軸に対して移動
+				double x_diff = abs(gr[line_num].max_x() - gr[line_num].min_x());
+				double y_diff = abs(gr[line_num].max_y() - gr[line_num].min_y());
+				if(x_diff < y_diff){
+					std::cout<<"y axis longer"<<std::endl;
+					dest_y = gr[line_num].min_y();
+				}
+				else{
+					std::cout<<"x axis longer"<<std::endl;
+					dest_x = gr[line_num].min_x();
+				}
+				dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
+				dest_theta = atan2(dest_y, dest_x);
+				//radをdegに変換
+				dest_theta = dest_theta * 180 / M_PI;
+			}
+			else if(step == 2){
+				//一番近い部分の角度分旋回→後退
+				dest_r = gr[line_num].min_distance();
+				for(int i = 0; i<gr[line_num].data.size();i++){
+					if(dest_r == gr[line_num].data[i].distance){
+						std::cout<<"found!"<<std::endl;
+						dest_theta = gr[line_num].data[i].deg;
+						//GUIプロットのためだけに代入
+						dest_x = gr[line_num].data[i].x;
+						dest_y = gr[line_num].data[i].y;
+						break;
+					}
+				}
+				dest_theta*= -1.;
+			}
+
+			//デバッグ用
+			std::cout << "dest_x=" << dest_x << ", dest_y=" << dest_y << "\n";
+			std::cout << "dest_r=" << dest_r << ", dest_theta=" << dest_theta << std::endl;
 
 #ifndef _NO_GUI
-	    		int dest_xr, dest_yr;
-	    		GraphGain(dest_x, dest_y, &dest_xr, &dest_yr);
-	    		cv::circle(group_img, cv::Point(dest_xr, dest_yr), 3, cv::Scalar(0, 255, 0), -1, 8);
-				cv::imshow("group_image",group_img);
-				cv::waitKey(0);
-				//目的地→緑
-				//Line→赤
-				//それ以外→青
+			int dest_xr, dest_yr;
+			GraphGain(dest_x, dest_y, &dest_xr, &dest_yr);
+			cv::circle(group_img, cv::Point(dest_xr, dest_yr), 3, cv::Scalar(0, 255, 0), -1, 8);
+			cv::imshow("group_image",group_img);
+			cv::waitKey(0);
+			//目的地→緑
+			//Line→赤
+			//それ以外→青
 #endif
-		mov.ConvertToMove(dest_r, dest_theta);
-		while(mov.ChkMoveState() == false);
-		delay(1000);
+			log_r.push_back(dest_r);
+			log_theta.push_back(dest_theta);
+			std::cout<<log_r.size()<<std::endl;
+			mov.ConvertToMove(dest_r, dest_theta);
+			while(mov.ChkMoveState() == false);
+		}
 
-        //どこかでリフトアップしておかないといけない
         mov.Shoot();
 	    while(mov.Busy()==false);
 	    mov.FreeMode();
         std::cout << "shoot completed.\n" << std::endl;
 		delay(1000);
-		// rev(1000);
-		mov.Rev(1000);
-		while(mov.ChkMoveState()==false);
+		for(int i=log_r.size()-1;i>=0;i--){
+			mov.ConvertToMove(log_r[i], log_theta[i]);
+			while(mov.ChkMoveState() == false);
+		}
 	}
 	ExitProcess(drv);
 

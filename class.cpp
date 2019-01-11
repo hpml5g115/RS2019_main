@@ -122,8 +122,8 @@ double group::min_y(void){
 	for (int i = 0; i < data.size();i++){
 		y_data.push_back(data[i].y);
 	}
-	double max = *std::min_element(y_data.begin(), y_data.end());
-	return max;
+	double min = *std::min_element(y_data.begin(), y_data.end());
+	return min;
 }
 
 double group::ave_distance(void){
@@ -156,4 +156,13 @@ double group::ave_y(void){
 	}
 	ave/=data.size();
 	return ave;
+}
+
+double group::min_distance(void){
+	std::vector<double> dis_data;
+	for (int i = 0; i < data.size();i++){
+		dis_data.push_back(data[i].distance);
+	}
+	double min = *std::min_element(dis_data.begin(), dis_data.end());
+	return min;
 }

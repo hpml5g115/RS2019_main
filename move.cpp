@@ -105,10 +105,12 @@ void robomove::Stop(void){
 void robomove::ConvertToMove(double distance, double angle){
 	if(angle<0.){
 		double abs_angle = abs(angle);
+		// std::cout << "r="<<abs_angle << std::endl;
 		Right(abs_angle);
 	}
 	else{
 		double abs_angle = abs(angle);
+		// std::cout << "l="<<abs_angle << std::endl;
 		Left(abs_angle);
 	}
 	//旋回完了まで待機
