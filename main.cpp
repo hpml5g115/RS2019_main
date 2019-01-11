@@ -32,6 +32,7 @@
 #include "class.h"
 
 // #define _ARM_TEST
+#define _GOAL_TEST
 
 #ifdef _ARM_TEST
 int main(void) {
@@ -54,6 +55,7 @@ int main(void) {
 	return 0;
 }
 #else
+
 int main(void) {
 	Sig_Initialize();
 	robomove mov;
@@ -101,6 +103,8 @@ int main(void) {
     //ボール検知→回収
     int continue_flag = 1;
 	while(1){
+//debug
+#ifndef _GOAL_TEST
 		int rev_count = 0;
 		std::cout<<"------ball capture phase-------"<<std::endl;
 	    do{
@@ -117,7 +121,7 @@ int main(void) {
 				current_result.add(tmp);
 				current_result.sort();
 				current_result.size_in();
-				
+
 				//リセット
 	            continue_flag = 0;
 				//初期化
@@ -188,7 +192,11 @@ int main(void) {
 				bool ball_found = false;
 	    		for(int pos = 0;pos < gr_num;pos++){
 					if(gr[pos].ball == true){
-						ball_found = true;
+						if(ball_found == false){
+							ball_found = true;
+							min_gr = pos;
+						}
+
 						//距離の平均値が一番近い物体を検知する
 						// if (gr[pos].data[0].distance < gr[min_gr].data[0].distance){
 						if(gr[pos].average() < gr[min_gr].average()){
@@ -201,7 +209,7 @@ int main(void) {
 				dest_y = 0.;
 				dest_r = 0.;
 				dest_theta = 0.;
-				
+
 				if(ball_found == true){
 					std::cout<<"target gr_num="<<min_gr<<std::endl;
 					for(int i = 0; i < gr[min_gr].count;i++){
@@ -234,16 +242,16 @@ int main(void) {
 				}
 #ifndef _NO_GUI
 				//debug
-				cv::Mat raw_img = cv::Mat::zeros(X_max, Y_max, CV_8UC3);
-				raw_img = cv::Scalar(0, 0, 0);
-	    		PictureGrid(raw_img);
-				for(int i=0;i<current_result.data.size();i++){
-					int xr, yr;
-					GraphGain(current_result.data[i].x, current_result.data[i].y, &xr, &yr);
-					cv::circle(raw_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
-				}
-				cv::imshow("group_image",raw_img);
-				cv::waitKey(0);
+				// cv::Mat raw_img = cv::Mat::zeros(X_max, Y_max, CV_8UC3);
+				// raw_img = cv::Scalar(0, 0, 0);
+	    		// PictureGrid(raw_img);
+				// for(int i=0;i<current_result.data.size();i++){
+				// 	int xr, yr;
+				// 	GraphGain(current_result.data[i].x, current_result.data[i].y, &xr, &yr);
+				// 	cv::circle(raw_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
+				// }
+				// cv::imshow("group_image",raw_img);
+				// cv::waitKey(0);
 
 	    		int dest_xr, dest_yr;
 	    		GraphGain(dest_x, dest_y, &dest_xr, &dest_yr);
@@ -300,8 +308,9 @@ int main(void) {
 	    }while(continue_flag == 1);
 		// rev(300);
 		mov.Rev(300);
-		while(mov.ChkMoveState()==false);		
+		while(mov.ChkMoveState()==false);
 
+#endif
 
         // current_result.erase();
 		std::cout<<"------goal phase-------"<<std::endl;
@@ -360,6 +369,13 @@ int main(void) {
 	    }while(line_count == 0);
 
 #ifndef _NO_GUI
+		int ball_count = 0;
+		for (int i = 0; i < gr_num;i++){
+			// std::cout<<std::boolalpha<<gr[i].line<<"   "<<gr[i].ball<<std::endl;
+			if (gr[i].ball == true){
+				ball_count++;
+			}
+		}
 		cv::Mat group_img = cv::Mat::zeros(X_max, Y_max, CV_8UC3);
 		group_img = cv::Scalar(0, 0, 0);
 		PictureGrid(group_img);
@@ -367,15 +383,23 @@ int main(void) {
 		con_str << "Object" << gr_num;
 		std::string str =con_str.str();
 		con_str << " Lines" <<line_count;
+		con_str << " Balls" << ball_count;
 		str = con_str.str();
-
 		cv::putText(group_img, str, cv::Point(0, 30), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(255, 255, 255), 2, CV_AA);
 		for (int pos = 0; pos < gr_num; pos++) {
-			if (gr[pos].line == false) {
+			if (gr[pos].line == true) {
 				for (int i = 0; i < gr[pos].count; i++) {
 					int xr, yr;
 					GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
 					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
+				}
+			}
+			else if (gr[pos].ball == true){
+				for (int i = 0; i < gr[pos].count; i++){
+					int xr, yr;
+					GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
+					//B G R
+					cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(211, 0, 148), -1, 8);
 				}
 			}
 			else {
@@ -388,17 +412,27 @@ int main(void) {
 		}
 #endif
 
-		//直線を複数検知した場合
-
-
 	    int line_num = 0;
 		//直線の配列番号を取得
+		bool line_first_update = false;
 		for(int pos = 0; pos < gr_num; pos++) {
 			if(gr[pos].line == true) {
-				line_num = pos;
-				break;
+				if(line_first_update == false){
+					line_num = pos;
+					line_first_update = true;
+					std::cout<<pos<<" "<<GroupLength(&gr[pos])<<std::endl;
+				}
+				else{
+					double max_length = GroupLength(&gr[line_num]);
+					double now_length = GroupLength(&gr[pos]);
+					std::cout<<pos<<" "<<now_length<<std::endl;
+					if(max_length < now_length){
+						line_num = pos;
+					}
+				}
 			}
 		}
+		std::cout<<"line_num="<<line_num<<std::endl;
 
 	    double max_x,min_x,max_y,min_y;
 
@@ -494,7 +528,6 @@ int main(void) {
 				//Line→赤
 				//それ以外→青
 #endif
-
 		mov.ConvertToMove(dest_r, dest_theta);
 		while(mov.ChkMoveState() == false);
 		delay(1000);
@@ -510,7 +543,7 @@ int main(void) {
 		while(mov.ChkMoveState()==false);
 	}
 	ExitProcess(drv);
-	
+
 	// Exit_pin();
 
 	return 0;

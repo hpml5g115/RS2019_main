@@ -147,7 +147,7 @@ int ClassifyGroup(group gr[50], int gr_num){
         }
         if (length < ball_max_lim && length > ball_min_lim){
             // std::cout<<length<<" ";
-            std::cout<<pos<<" ave:"<<gr[pos].average()<<std::endl;
+            // std::cout<<pos<<" ave:"<<gr[pos].average()<<std::endl;
             gr[pos].ball = true;
         }
     }
