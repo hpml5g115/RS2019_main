@@ -54,11 +54,24 @@ void measure::sort(void){
 	// std::cout<<std::endl;
 }
 
+group::group(){
+	count = 0;
+	line = false;
+	ball = false;
+	a = 0.;
+	b = 0.;
+}
+
 void group::size_in(void) {
 	count = data.size();
 }
 
 void group::erase(void) {
+	count = 0;
+	line = false;
+	ball = false;
+	a = 0.;
+	b = 0.;
 	data.clear();
 }
 

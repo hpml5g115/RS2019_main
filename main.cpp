@@ -57,7 +57,7 @@ int main(void) {
 	printf("走行を開始するにはEnterキーを押してください\n");
 	getchar();
 
-    group gr[50];
+    // group gr[50];
     int gr_num = 0;
     int line_count = 0;
 
@@ -115,6 +115,12 @@ int main(void) {
 
 
 	    		line_count = ClassifyGroup(gr, gr_num);
+				int ball_count = 0;
+				for (int i = 0; i < gr_num;i++){
+					if (gr[i].ball == true){
+						ball_count++;
+					}
+				}
 
 #ifndef _NO_GUI
 				cv::Mat group_img = cv::Mat::zeros(X_max, Y_max, CV_8UC3);
@@ -124,17 +130,26 @@ int main(void) {
 	    		con_str << "Object" << gr_num;
 	    		std::string str =con_str.str();
 	    		con_str << " Lines" <<line_count;
-	    		str = con_str.str();
+				con_str << " Balls" << ball_count;
+				str = con_str.str();
 
 	    		cv::putText(group_img, str, cv::Point(0, 30), cv::FONT_HERSHEY_SIMPLEX, 1.2, cv::Scalar(255, 255, 255), 2, CV_AA);
 	    		for (int pos = 0; pos < gr_num; pos++) {
-	    			if (gr[pos].line == false) {
+	    			if (gr[pos].line == true) {
 	    				for (int i = 0; i < gr[pos].count; i++) {
 	    					int xr, yr;
 							GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
 							cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
 	    				}
 	    			}
+					else if (gr[pos].ball == true){
+						for (int i = 0; i < gr[pos].count; i++){
+							int xr, yr;
+							GraphGain(gr[pos].data[i].x, gr[pos].data[i].y, &xr, &yr);
+							//B G R
+							cv::circle(group_img, cv::Point(xr, yr), 1, cv::Scalar(211, 0, 148), -1, 8);
+						}
+					}
 	    			else {
 	    				for (int i = 0; i < gr[pos].count; i++) {
 	    					int xr, yr;
@@ -147,12 +162,17 @@ int main(void) {
 	    		int min_gr = 0;
 				bool ball_found = false;
 	    		for(int pos = 1;pos < gr_num;pos++){
-					if(gr[pos].line != true){
+					if(gr[pos].ball == true){
 						ball_found = true;
-		    			//距離の平均値が一番近い物体を検知する
-						if(gr[pos].data[0].distance < gr[min_gr].data[0].distance){
+						if (min_gr == 0){
 							min_gr = pos;
-		                }
+						}
+						else{
+							//距離の平均値が一番近い物体を検知する
+							if (gr[pos].data[0].distance < gr[min_gr].data[0].distance){
+								min_gr = pos;
+							}
+						}
 					}
 	    		}
 				double dest_x, dest_y, dest_r, dest_theta;
@@ -196,8 +216,9 @@ int main(void) {
 				cv::imshow("group_image",group_img);
 				cv::waitKey(0);
 				//目的地→緑
-				//Line→赤
-				//それ以外→青
+				//Line→青
+				//ボール→紫
+				//それ以外→赤
 #endif
 
 				mov.ConvertToMove(dest_r, dest_theta);

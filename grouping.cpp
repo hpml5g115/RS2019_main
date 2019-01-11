@@ -70,7 +70,7 @@ void Connect(group *first, group *last){
     }
 }
 
-double GroupLength(group *gr){
+double GroupLength(const group &gr){
     double max_x,min_x,max_y,min_y;
     // max_x = gr->x[0];
     // min_x = gr->x[0];
@@ -92,10 +92,10 @@ double GroupLength(group *gr){
     //         min_y = gr->y[i];
     //     }
     // }
-    max_x = gr->max_x();
-    min_x = gr->min_x();
-    max_y = gr->max_y();
-    min_y = gr->min_y();
+    max_x = gr.max_x();
+    min_x = gr.min_x();
+    max_y = gr.max_y();
+    min_y = gr.min_y();
 
     double abs_x,abs_y;
     abs_x = fabs(max_x - min_x);
@@ -103,22 +103,22 @@ double GroupLength(group *gr){
 
     double length;
     if(abs_x > abs_y) {
-        for(int i = 0; i < gr->count; i++) {
-            if(gr->data[i].x == max_x) {
-                max_y = gr->data[i].y;
+        for(int i = 0; i < gr.count; i++) {
+            if(gr.data[i].x == max_x) {
+                max_y = gr.data[i].y;
             }
-            if(gr->data[i].x == min_x){
-                min_y = gr->data[i].y;
+            if(gr.data[i].x == min_x){
+                min_y = gr.data[i].y;
             }
         }
     }
     else {
-        for(int i = 0; i < gr->count; i++) {
-            if(gr->data[i].y == max_y) {
-                max_x = gr->data[i].x;
+        for(int i = 0; i < gr.count; i++) {
+            if(gr.data[i].y == max_y) {
+                max_x = gr.data[i].x;
             }
-            if(gr->data[i].y == min_y){
-                min_x = gr->data[i].x;
+            if(gr.data[i].y == min_y){
+                min_x = gr.data[i].x;
             }
         }
     }
@@ -127,16 +127,19 @@ double GroupLength(group *gr){
 }
 
 int ClassifyGroup(group gr[50], int gr_num){
-    int num = 0;
+    int line_num = 0;
 
     for(int pos = 0;pos < gr_num; pos++){
-        if(GroupLength(&gr[pos]) > ball_lim){
+        gr[pos].line = false;
+        gr[pos].ball = false;
+        double length = GroupLength(gr[pos]);
+        if (length > wall_lim){
             gr[pos].line = true;
-            num++;
+            line_num++;
         }
-        else{
-            gr[pos].line = false;
+        if (length < ball_max_lim && length > ball_min_lim){
+            gr[pos].ball = true;
         }
     }
-    return num;
+    return line_num;
 }
