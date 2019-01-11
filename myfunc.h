@@ -51,5 +51,6 @@ bool Initialize(RPlidarDriver * drv);
 bool FinderMeasure(RPlidarDriver * drv, measure * result);
 //終了時の処理関数
 void ExitProcess(RPlidarDriver * drv);
-
+//データ二回測定→グループ化関数
+bool MeasureTwice(RPlidarDriver * drv, measure *result);
 #endif

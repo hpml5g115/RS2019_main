@@ -153,3 +153,16 @@ int ClassifyGroup(group gr[50], int gr_num){
     }
     return line_num;
 }
+
+int Grouping(measure * current_result, group gr[50]){
+    int gr_num = 0;
+    measure reduce_result;
+    ZeroRemove(current_result, &reduce_result);
+
+    gr_num = MakeGroup(&reduce_result, gr);
+    if(gr_num != 0){
+        gr_num = Connect(&gr[0], &gr[gr_num - 1], gr_num);
+    }
+    
+    return gr_num;
+}

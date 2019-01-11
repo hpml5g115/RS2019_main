@@ -32,7 +32,7 @@
 #include "class.h"
 
 // #define _ARM_TEST
-#define _GOAL_TEST
+// #define _GOAL_TEST
 
 #ifdef _ARM_TEST
 int main(void) {
@@ -83,7 +83,6 @@ int main(void) {
 
     group gr[50];
     int gr_num = 0;
-    int line_count = 0;
 
 #ifndef _NO_GUI
 	cv::namedWindow("group_image", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
@@ -111,17 +110,7 @@ int main(void) {
 			mov.BallDetect();
 			//リセット
 			measure current_result;
-			if (FinderMeasure(drv, &current_result) == true){
-				//2回測定する
-				measure tmp;
-				while(FinderMeasure(drv, &tmp) == false){
-					std::cout << "wait for RPLIDAR measuring..." << std::endl;
-				}
-				//最初のデータに追加
-				current_result.add(tmp);
-				current_result.sort();
-				current_result.size_in();
-
+			if (MeasureTwice(drv, &current_result) == true){
 				//リセット
 	            continue_flag = 0;
 				//初期化
@@ -129,19 +118,18 @@ int main(void) {
 					gr[pos].erase();
 				}
 				gr_num = 0;
-	            line_count = 0;
 	    		//座標変換
 	    		current_result.convert();
 
-	    		measure reduce_result;
-	    		ZeroRemove(&current_result, &reduce_result);
+	    		// measure reduce_result;
+	    		// ZeroRemove(&current_result, &reduce_result);
 
-	    		gr_num = MakeGroup(&reduce_result, gr);
-				if(gr_num != 0){
-					gr_num = Connect(&gr[0], &gr[gr_num - 1], gr_num);
-				}
-
-	    		line_count = ClassifyGroup(gr, gr_num);
+	    		// gr_num = MakeGroup(&reduce_result, gr);
+				// if(gr_num != 0){
+				// 	gr_num = Connect(&gr[0], &gr[gr_num - 1], gr_num);
+				// }
+				gr_num = Grouping(&current_result, gr);
+				int line_count = ClassifyGroup(gr, gr_num);
 				int ball_count = 0;
 				// std::cout<<"line     ball"<<std::endl;
 				for (int i = 0; i < gr_num;i++){
@@ -199,7 +187,7 @@ int main(void) {
 
 						//距離の平均値が一番近い物体を検知する
 						// if (gr[pos].data[0].distance < gr[min_gr].data[0].distance){
-						if(gr[pos].average() < gr[min_gr].average()){
+						if(gr[pos].ave_distance() < gr[min_gr].ave_distance()){
 							min_gr = pos;
 						}
 					}
@@ -212,16 +200,16 @@ int main(void) {
 
 				if(ball_found == true){
 					std::cout<<"target gr_num="<<min_gr<<std::endl;
-					for(int i = 0; i < gr[min_gr].count;i++){
-						dest_x += gr[min_gr].data[i].x;
-						dest_y += gr[min_gr].data[i].y;
-					}
-					dest_x = dest_x / gr[min_gr].count;
-					dest_y = dest_y / gr[min_gr].count;
+					// for(int i = 0; i < gr[min_gr].count;i++){
+					// 	dest_x += gr[min_gr].data[i].x;
+					// 	dest_y += gr[min_gr].data[i].y;
+					// }
+					// dest_x = dest_x / gr[min_gr].count;
+					// dest_y = dest_y / gr[min_gr].count;
 
+					dest_x = gr[min_gr].ave_x();
+					dest_y = gr[min_gr].ave_y();
 
-					//dest_x = (gr[min_gr].x[0] + gr[min_gr].x[gr[min_gr].count - 1]) / 2.0;
-					//dest_y = (gr[min_gr].y[0] + gr[min_gr].y[gr[min_gr].count - 1]) / 2.0;
 					dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
 					dest_theta = atan2(dest_y, dest_x);
 					//radをdegに変換
@@ -314,22 +302,12 @@ int main(void) {
 
         // current_result.erase();
 		std::cout<<"------goal phase-------"<<std::endl;
+		int line_count = 0;
 	    //回収→ゴール
 	    do{
 			//リセット
 			measure current_result;
-			if (FinderMeasure(drv, &current_result) == true){
-				//2回測定する
-				measure tmp;
-				while(FinderMeasure(drv, &tmp) == false){
-					std::cout << "wait for RPLIDAR measuring..." << std::endl;
-				}
-				//最初のデータに追加
-				current_result.add(tmp);
-				current_result.sort();
-				current_result.size_in();
-
-				//リセット
+			if (MeasureTwice(drv, &current_result) == true){
 	            //初期化
 	            for(int pos = 0; pos < gr_num;pos++){
 	                gr[pos].erase();
@@ -434,81 +412,11 @@ int main(void) {
 		}
 		std::cout<<"line_num="<<line_num<<std::endl;
 
-	    double max_x,min_x,max_y,min_y;
-
-		//最大値・最小値を探す
-		// max_x = gr[line_num].x[0];
-		// min_x = gr[line_num].x[0];
-		// max_y = gr[line_num].y[0];
-		// min_y = gr[line_num].y[0];
-		// for(int i = 0; i < gr[line_num].count; i++) {
-		// 	if(max_x < gr[line_num].x[i]) {
-		// 		max_x = gr[line_num].x[i];
-		// 	}
-		// 	if(min_x > gr[line_num].x[i]) {
-		// 		min_x = gr[line_num].x[i];
-		// 	}
-		// 	if(max_y < gr[line_num].y[i]) {
-		// 		max_y = gr[line_num].y[i];
-		// 	}
-		// 	if(min_y > gr[line_num].y[i]) {
-		// 		min_y = gr[line_num].y[i];
-		// 	}
-		// }
-		// max_x = *std::max_element(gr[line_num].x.begin(), gr[line_num].x.end());
-		// min_x = *std::min_element(gr[line_num].x.begin(), gr[line_num].x.end());
-		// max_y = *std::max_element(gr[line_num].y.begin(), gr[line_num].y.end());
-		// min_y = *std::max_element(gr[line_num].y.begin(), gr[line_num].y.end());
-		max_x = gr[line_num].max_x();
-		min_x = gr[line_num].min_x();
-		max_y = gr[line_num].max_y();
-		min_y = gr[line_num].min_y();
-
-		double abs_x,abs_y;
-		abs_x = fabs(max_x - min_x);
-		abs_y = fabs(max_y - min_y);
-
-		const double wall_length = 900;
+		//途中まで移動
+		const double shrink_rate = 0.8;
 		double dest_x, dest_y, dest_r, dest_theta;
-		dest_x = 0.;
-		dest_y = 0.;
-		dest_r = 0.;
-		dest_theta = 0.;
-		if(abs_x > abs_y) {
-			dest_x = max_x;
-			for(int i = 0; i < gr[line_num].count; i++) {
-				if(gr[line_num].data[i].x == dest_x) {
-					dest_y = gr[line_num].data[i].y;
-					break;
-				}
-			}
-			//x座標が長いので壁の長さ=x座標
-			if(dest_y >= 0){
-				dest_y -= wall_length;
-			}
-			else{
-				dest_y += wall_length;
-			}
-		}
-		else {
-			dest_y = max_y;
-			for(int i = 0; i < gr[line_num].count; i++) {
-				if(gr[line_num].data[i].y == dest_y) {
-					dest_x = gr[line_num].data[i].x;
-					break;
-				}
-			}
-
-			//y座標が長いので壁の長さ=y座標
-			if(dest_x >= 0){
-				dest_x -= wall_length;
-			}
-			else{
-				dest_x += wall_length;
-			}
-		}
-
-
+		dest_x = gr[line_num].ave_x() * 0.8;
+		dest_y = gr[line_num].ave_y() * 0.8;
 		dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
 		dest_theta = atan2(dest_y, dest_x);
 		//radをdegに変換

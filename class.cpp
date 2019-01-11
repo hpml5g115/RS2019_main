@@ -126,7 +126,7 @@ double group::min_y(void){
 	return max;
 }
 
-double group::average(void){
+double group::ave_distance(void){
 	double ave=0.;
 	for(int i=0;i<data.size();i++){
 		// std::cout<<data[i].distance<<" ";
@@ -137,5 +137,23 @@ double group::average(void){
 	// std::cout<<"ave="<<ave<<std::endl;
 	// std::cout<<"----------------"<<std::endl;
 	
+	return ave;
+}
+
+double group::ave_x(void){
+	double ave=0.;
+	for(int i=0;i<data.size();i++){
+		ave+=data[i].x;
+	}
+	ave/=data.size();
+	return ave;
+}
+
+double group::ave_y(void){
+	double ave=0.;
+	for(int i=0;i<data.size();i++){
+		ave+=data[i].y;
+	}
+	ave/=data.size();
 	return ave;
 }

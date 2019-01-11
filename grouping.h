@@ -24,4 +24,5 @@ int Connect(group *first, group *last,int gr_num);
 
 double GroupLength(group *gr);
 
+int Grouping(measure * current_result, group gr[50]);
 #endif

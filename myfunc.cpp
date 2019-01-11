@@ -203,3 +203,23 @@ void PictureGrid(cv::Mat img) {
 	//y軸
 	cv::line(img, cv::Point(X_half, 0), cv::Point(X_half, Y_max), cv::Scalar(150, 150, 150), grid_width, grid_type);
 }
+
+bool MeasureTwice(RPlidarDriver * drv, measure *result){
+	if (FinderMeasure(drv, result) == true){
+		//2回測定する
+		measure tmp;
+		while(FinderMeasure(drv, &tmp) == false){
+			std::cout << "wait for RPLIDAR measuring..." << std::endl;
+		}
+		//最初のデータに追加
+		result->add(tmp);
+		result->sort();
+		result->size_in();
+
+		return true;
+	}
+	else{
+		return false;
+	}	
+
+}
