@@ -31,7 +31,29 @@
 #include "grouping.h"
 #include "class.h"
 
+// #define _ARM_TEST
 
+#ifdef _ARM_TEST
+int main(void) {
+	Sig_Initialize();
+	robomove mov;
+	// mov.BallDetect();
+	// std::cout<<"ball searching..."<<std::endl;
+	// while(mov.ChkBallState() == false||mov.Busy()==true);
+	// delay(1000);
+	mov.LiftUp();
+	std::cout<<"lift up..."<<std::endl;
+	while(mov.Busy()==true);
+	mov.FreeMode();
+	delay(1000);
+	mov.Shoot();
+	std::cout<<"shoot..."<<std::endl;
+	while(mov.Busy()==true);
+	mov.FreeMode();
+
+	return 0;
+}
+#else
 int main(void) {
 	Sig_Initialize();
 	robomove mov;
@@ -57,7 +79,7 @@ int main(void) {
 	printf("走行を開始するにはEnterキーを押してください\n");
 	getchar();
 
-    // group gr[50];
+    group gr[50];
     int gr_num = 0;
     int line_count = 0;
 
@@ -94,7 +116,8 @@ int main(void) {
 				//最初のデータに追加
 				current_result.add(tmp);
 				current_result.sort();
-
+				current_result.size_in();
+				
 				//リセット
 	            continue_flag = 0;
 				//初期化
@@ -109,14 +132,16 @@ int main(void) {
 	    		measure reduce_result;
 	    		ZeroRemove(&current_result, &reduce_result);
 
-
 	    		gr_num = MakeGroup(&reduce_result, gr);
-				Connect(&gr[0], &gr[gr_num - 1]);
-
+				if(gr_num != 0){
+					gr_num = Connect(&gr[0], &gr[gr_num - 1], gr_num);
+				}
 
 	    		line_count = ClassifyGroup(gr, gr_num);
 				int ball_count = 0;
+				// std::cout<<"line     ball"<<std::endl;
 				for (int i = 0; i < gr_num;i++){
+					// std::cout<<std::boolalpha<<gr[i].line<<"   "<<gr[i].ball<<std::endl;
 					if (gr[i].ball == true){
 						ball_count++;
 					}
@@ -161,17 +186,13 @@ int main(void) {
 #endif
 	    		int min_gr = 0;
 				bool ball_found = false;
-	    		for(int pos = 1;pos < gr_num;pos++){
+	    		for(int pos = 0;pos < gr_num;pos++){
 					if(gr[pos].ball == true){
 						ball_found = true;
-						if (min_gr == 0){
+						//距離の平均値が一番近い物体を検知する
+						// if (gr[pos].data[0].distance < gr[min_gr].data[0].distance){
+						if(gr[pos].average() < gr[min_gr].average()){
 							min_gr = pos;
-						}
-						else{
-							//距離の平均値が一番近い物体を検知する
-							if (gr[pos].data[0].distance < gr[min_gr].data[0].distance){
-								min_gr = pos;
-							}
 						}
 					}
 	    		}
@@ -180,8 +201,9 @@ int main(void) {
 				dest_y = 0.;
 				dest_r = 0.;
 				dest_theta = 0.;
-				//ボールが見つからなかったとき
+				
 				if(ball_found == true){
+					std::cout<<"target gr_num="<<min_gr<<std::endl;
 					for(int i = 0; i < gr[min_gr].count;i++){
 						dest_x += gr[min_gr].data[i].x;
 						dest_y += gr[min_gr].data[i].y;
@@ -204,12 +226,25 @@ int main(void) {
 					//移動距離を微調整
 					dest_r -= 50;
 				}
+				//ボールが見つからなかったとき
 				else{
 					std::cout << "can't find balls!" << std::endl;
 					dest_r = 100.;
 					dest_theta = 0.;
 				}
 #ifndef _NO_GUI
+				//debug
+				cv::Mat raw_img = cv::Mat::zeros(X_max, Y_max, CV_8UC3);
+				raw_img = cv::Scalar(0, 0, 0);
+	    		PictureGrid(raw_img);
+				for(int i=0;i<current_result.data.size();i++){
+					int xr, yr;
+					GraphGain(current_result.data[i].x, current_result.data[i].y, &xr, &yr);
+					cv::circle(raw_img, cv::Point(xr, yr), 1, cv::Scalar(255, 0, 0), -1, 8);
+				}
+				cv::imshow("group_image",raw_img);
+				cv::waitKey(0);
+
 	    		int dest_xr, dest_yr;
 	    		GraphGain(dest_x, dest_y, &dest_xr, &dest_yr);
 	    		cv::circle(group_img, cv::Point(dest_xr, dest_yr), 3, cv::Scalar(0, 255, 0), -1, 8);
@@ -283,6 +318,7 @@ int main(void) {
 				//最初のデータに追加
 				current_result.add(tmp);
 				current_result.sort();
+				current_result.size_in();
 
 				//リセット
 	            //初期化
@@ -301,6 +337,9 @@ int main(void) {
 	            ZeroRemove(&current_result, &reduce_result);
 
 	            gr_num = MakeGroup(&reduce_result, gr);
+				if(gr_num != 0){
+					gr_num = Connect(&gr[0], &gr[gr_num - 1], gr_num);
+				}
 
 	            line_count = ClassifyGroup(gr, gr_num);
 
@@ -476,3 +515,4 @@ int main(void) {
 
 	return 0;
 }
+#endif

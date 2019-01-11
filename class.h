@@ -49,6 +49,7 @@ public:
   double min_x(void);
   double max_y(void);
   double min_y(void);
+  double average(void);
 };
 
 #endif

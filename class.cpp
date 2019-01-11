@@ -2,6 +2,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <algorithm>
+#include <fstream>
 #include <iostream>	//debug
 
 #include "class.h"
@@ -42,14 +43,28 @@ void measure::add(const measure &next_data){
 }
 
 void measure::sort(void){
+	// std::ofstream before_data;
+	// before_data.open("before.csv",std::ios::out);
+	// before_data<<"deg,distance,x,y"<<std::endl;
 	// for(int i=0;i<data.size();i++){
-	// 	std::cout<< data[i].deg<<" ";
+	// 	// std::cout<< data[i].deg<<" ";
+	// 	before_data<<data[i].deg<<',';
+	// 	before_data<<data[i].distance<<',';
+	// 	before_data<<data[i].x<<',';
+	// 	before_data<<data[i].y<<std::endl;
 	// }
 	//https://codezine.jp/article/detail/6020
 	std::sort(data.begin(), data.end(), [](const rp_datas &x, const rp_datas &y) { return x.deg < y.deg; });
-	std::cout<<"---------------------------"<<std::endl;
+	// std::cout<<"---------------------------"<<std::endl;
+	// std::ofstream after_data;
+	// after_data.open("after.csv",std::ios::out);
+	// after_data<<"deg,distance,x,y"<<std::endl;
 	// for(int i=0;i<data.size();i++){
-	// 	std::cout<< data[i].deg<<" ";
+	// 	// std::cout<< data[i].deg<<" ";
+	// 	after_data<<data[i].deg<<',';
+	// 	after_data<<data[i].distance<<',';
+	// 	after_data<<data[i].x<<',';
+	// 	after_data<<data[i].y<<std::endl;
 	// }
 	// std::cout<<std::endl;
 }
@@ -109,4 +124,18 @@ double group::min_y(void){
 	}
 	double max = *std::min_element(y_data.begin(), y_data.end());
 	return max;
+}
+
+double group::average(void){
+	double ave=0.;
+	for(int i=0;i<data.size();i++){
+		// std::cout<<data[i].distance<<" ";
+		ave+=data[i].distance;
+	}
+	ave/=data.size();
+	// std::cout<<std::endl;
+	// std::cout<<"ave="<<ave<<std::endl;
+	// std::cout<<"----------------"<<std::endl;
+	
+	return ave;
 }

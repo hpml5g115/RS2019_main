@@ -14,7 +14,7 @@ const int Y_max = 600;
 const int X_half = (int)(X_max / 2);
 const int Y_half = (int)(Y_max / 2);
 //表示するレンジ(これ以上は切り捨て)
-const double dis_range = 6000;
+const double dis_range =2000;
 
 #ifndef _countof
 #define _countof(_Array) (int)(sizeof(_Array) / sizeof(_Array[0]))
