@@ -31,27 +31,32 @@
 #include "grouping.h"
 #include "class.h"
 
-#define _ARM_TEST
-#define _GOAL_TEST
+// #define _ARM_TEST
+// #define _GOAL_TEST
 
 #ifdef _ARM_TEST
 int main(void) {
-	Sig_Initialize();
-	robomove mov;
-	mov.BallDetect();
-	std::cout<<"ball searching..."<<std::endl;
-	while(mov.ChkBallState() == false||mov.Busy()==true);
-	delay(1000);
-	mov.LiftUp();
-	std::cout<<"lift up..."<<std::endl;
-	while(mov.Busy()==true);
-	mov.FreeMode();
-	delay(1000);
-	mov.Shoot();
-	std::cout<<"shoot..."<<std::endl;
-	while(mov.Busy()==true);
-	mov.FreeMode();
+	for(int i =0;i<2;i++){
+		Sig_Initialize();
+		robomove mov;
+		mov.BallDetect();
+		std::cout<<"ball searching..."<<std::endl;
+		while(mov.ChkBallState() == false||mov.Busy()==true);
+		delay(1000);
+		if(mov.ChkBallState() == true){
+			mov.LiftUp();
+			std::cout<<"lift up..."<<std::endl;
+			while(mov.Busy()==true);
+			mov.FreeMode();
+			delay(1000);
+			mov.Shoot();
+			std::cout<<"shoot..."<<std::endl;
+			while(mov.Busy()==true);
+		}
 
+		mov.FreeMode();
+		delay(1000);
+	}
 	return 0;
 }
 #else
@@ -257,8 +262,16 @@ int main(void) {
 					std::cout << "Ball is Captured." << std::endl;
 					rev_count = 0;
 					//持ち上げ
-					mov.LiftUp();
-					while(mov.Busy() == true);
+					// mov.LiftUp();
+					// while(mov.Busy() == true);
+
+					// //途中でボールをリリースしてしまった場合
+					// if(mov.ChkBallState() == false){
+					// 	mov.Shoot();
+					// 	while(mov.Busy() == true);
+					// 	continue_flag = 1;
+					// 	rev_count++;
+					// }
 
 					//debug
 					break;
@@ -315,6 +328,7 @@ int main(void) {
 					}
 				}
 			}while(line_count == 0);
+			std::cout<<"data update"<<std::endl;
 
 #ifndef _NO_GUI
 			int ball_count = 0;
@@ -451,6 +465,8 @@ int main(void) {
 				mov.ConvertToMove(dest_r, dest_theta);
 				while(mov.ChkMoveState() == false);
 				step++;
+				mov.LiftUp();
+				while(mov.Busy() == true);
 			}
 			else if(step == 1){
 				if(front_adjust == true){
@@ -458,7 +474,7 @@ int main(void) {
 					while(mov.ChkMoveState() == false);
 					delay(1000);
 					//後退して位置合わせ
-					const double wall_diff = 420.;
+					const double wall_diff = 400.;
 					double rev_length = dest_r - wall_diff;
 					std::cout<<"rev_length="<<rev_length<<std::endl;
 					if(rev_length>0.){
@@ -478,9 +494,11 @@ int main(void) {
 			}
 		}
 
-        // mov.Shoot();
-	    // while(mov.Busy()==false);
-	    // mov.FreeMode();
+		//持ち上げ
+		// delay(500);
+        mov.Shoot();
+	    while(mov.Busy() == true);
+	    mov.FreeMode();
         std::cout << "shoot completed.\n" << std::endl;
 		delay(1000);
 		std::cout<<"log_size="<<log_r.size()<<std::endl;
