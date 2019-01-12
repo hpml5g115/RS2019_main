@@ -11,6 +11,7 @@
 //#include <fstream>
 #include <cmath>
 #include <algorithm>
+#include <unistd.h>	//ファイル移動など
 //#include <wiringPi.h>
 //#include <softPwm.h>
 //#include <signal.h>
@@ -329,7 +330,7 @@ int main(void) {
 					}
 				}
 			}while(line_count == 0);
-			std::cout<<"data update"<<std::endl;
+			std::cout << "data update" << std::endl;
 
 #ifndef _NO_GUI
 			int ball_count = 0;
@@ -383,19 +384,19 @@ int main(void) {
 					if(line_first_update == false){
 						line_num = pos;
 						line_first_update = true;
-						std::cout<<pos<<" "<<GroupLength(&gr[pos])<<std::endl;
+						std::cout << pos << " " << GroupLength(&gr[pos]) << std::endl;
 					}
 					else{
 						double max_length = GroupLength(&gr[line_num]);
 						double now_length = GroupLength(&gr[pos]);
-						std::cout<<pos<<" "<<now_length<<std::endl;
+						std::cout << pos << " " << now_length << std::endl;
 						if(max_length < now_length){
 							line_num = pos;
 						}
 					}
 				}
 			}
-			std::cout<<"line_num="<<line_num<<std::endl;
+			std::cout << "line_num=" << line_num << std::endl;
 
 			double dest_x, dest_y, dest_r, dest_theta;
 			dest_x = 0.;
@@ -407,7 +408,7 @@ int main(void) {
 
 			//途中まで移動
 			if(step == 0){
-				std::cout<<"close mode"<<std::endl;
+				std::cout << "close mode" << std::endl;
 				const double shrink_distance = 800.;
 				dest_x = gr[line_num].ave_x();
 				dest_y = gr[line_num].ave_y();
@@ -420,14 +421,14 @@ int main(void) {
 				dest_theta = dest_theta * 180 / M_PI;
 			}
 			else if(step == 1){
-				std::cout<<"------angle adjsut mode------"<<std::endl;
+				std::cout << "------angle adjust mode------" << std::endl;
 				//一番近い部分の角度分旋回→後退
 				const double target_angle = 180.;
 				dest_r = gr[line_num].min_distance();
 				double raw_deg = 0.;
 				for(int i = 0; i<gr[line_num].data.size();i++){
 					if(dest_r == gr[line_num].data[i].distance){
-						dest_theta = -1.*(gr[line_num].data[i].deg - target_angle);
+						dest_theta = -1. * (gr[line_num].data[i].deg - target_angle);
 						raw_deg = gr[line_num].data[i].deg;
 						// if(tmp_deg > 360.){
 						// 	tmp_deg -= 360.;
@@ -445,7 +446,7 @@ int main(void) {
 					}
 				}
 				//反転させる
-				std::cout<<"raw_deg:"<<raw_deg<<std::endl;
+				std::cout << "raw_deg:" << raw_deg << std::endl;
 				const double angle_diff = 5.;
 				const double angle_min = target_angle - angle_diff;
 				const double angle_max = target_angle + angle_diff;
@@ -472,7 +473,7 @@ int main(void) {
 			if(step == 0){
 				log_r.push_back(dest_r);
 				// log_theta.push_back(0.);
-				mov.ConvertToMove(dest_r, dest_theta,4);
+				mov.ConvertToMove(dest_r, dest_theta, 4);
 				while(mov.ChkMoveState() == false);
 				step++;
 				mov.LiftUp();
@@ -483,9 +484,9 @@ int main(void) {
 					//後退して位置合わせ
 					const double wall_diff = 400.;
 					double rev_length = dest_r - wall_diff;
-					std::cout<<"rev_length="<<rev_length<<std::endl;
+					std::cout << "rev_length=" << rev_length << std::endl;
 					if(rev_length>0.){
-						mov.Rev(rev_length,5);
+						mov.Rev(rev_length, 5);
 						while(mov.ChkMoveState() == false);
 						log_r.push_back(rev_length);
 						// log_theta.push_back(0.);
@@ -495,7 +496,7 @@ int main(void) {
 				else{
 					log_r.push_back(0.);
 					// log_theta.push_back(dest_theta);
-					mov.ConvertToMove(0., dest_theta,4);
+					mov.ConvertToMove(0., dest_theta, 4);
 					while(mov.ChkMoveState() == false);
 				}
 			}
@@ -506,13 +507,14 @@ int main(void) {
         mov.Shoot();
 	    while(mov.Busy() == true);
 	    mov.FreeMode();
-        std::cout << "shoot completed.\n" << std::endl;
+		std::cout << "shoot completed.\n"
+				  << std::endl;
 		delay(1000);
-		std::cout<<"log_size="<<log_r.size()<<std::endl;
+		std::cout << "log_size=" << log_r.size() << std::endl;
 		double distance_total = 0.;
-		for(int i=log_r.size()-1;i>=0;i--){
+		for (int i = log_r.size() - 1; i >= 0; i--){
 			// std::cout << "dest_r=" << log_r[i] << ", dest_theta=" << -log_theta[i] << std::endl;
-			distance_total+=log_r[i];
+			distance_total += log_r[i];
 			std::cout << "dest_r=" << log_r[i] << std::endl;
 			// mov.ConvertToMove(log_r[i], 0.);
 			// while(mov.ChkMoveState() == false);
