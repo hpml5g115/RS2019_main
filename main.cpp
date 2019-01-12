@@ -32,16 +32,16 @@
 #include "class.h"
 
 // #define _ARM_TEST
-// #define _GOAL_TEST
+#define _GOAL_TEST
 
 #ifdef _ARM_TEST
 int main(void) {
 	Sig_Initialize();
 	robomove mov;
-	// mov.BallDetect();
-	// std::cout<<"ball searching..."<<std::endl;
-	// while(mov.ChkBallState() == false||mov.Busy()==true);
-	// delay(1000);
+	mov.BallDetect();
+	std::cout<<"ball searching..."<<std::endl;
+	while(mov.ChkBallState() == false||mov.Busy()==true);
+	delay(1000);
 	mov.LiftUp();
 	std::cout<<"lift up..."<<std::endl;
 	while(mov.Busy()==true);
@@ -289,7 +289,8 @@ int main(void) {
 	    //回収→ゴール
 		//移動した座標を保存
 		std::vector<double> log_r,log_theta;
-		for(int step = 0; step < 3;step++){
+		int step = 0;
+		while(step < 3){
 			do{
 				//リセット
 				measure current_result;
@@ -388,57 +389,19 @@ int main(void) {
 			dest_theta = 0.;
 			//途中まで移動
 			if(step == 0){
-				const double shrink_rate = 0.65;
-				dest_x = gr[line_num].ave_x() * shrink_rate;
-				dest_y = gr[line_num].ave_y() * shrink_rate;
-				dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
+				const double shrink_distance = 800.;
+				dest_x = gr[line_num].ave_x();
+				dest_y = gr[line_num].ave_y();
+				dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2)) - shrink_distance;
 				dest_theta = atan2(dest_y, dest_x);
+				//GUI用に再変換
+				dest_x = dest_r * cos(dest_theta);
+				dest_y = dest_r * sin(dest_theta);
 				//radをdegに変換
 				dest_theta = dest_theta * 180 / M_PI;
+				step++;
 			}
 			else if(step == 1){
-				//長い軸に対して移動
-				double x_diff = abs(gr[line_num].max_x() - gr[line_num].min_x());
-				double y_diff = abs(gr[line_num].max_y() - gr[line_num].min_y());
-				if(x_diff < y_diff){
-					std::cout<<"y axis longer"<<std::endl;
-					dest_y = gr[line_num].min_y();
-				}
-				else{
-					std::cout<<"x axis longer"<<std::endl;
-					dest_x = gr[line_num].min_x();
-				}
-				dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
-				dest_theta = atan2(dest_y, dest_x);
-				//radをdegに変換
-				dest_theta = dest_theta * 180 / M_PI;
-			}
-			else if(step == 2){
-				//一番近い部分の角度分旋回→後退
-				dest_r = gr[line_num].min_distance();
-				for(int i = 0; i<gr[line_num].data.size();i++){
-					if(dest_r == gr[line_num].data[i].distance){
-						std::cout<<"found!"<<std::endl;
-						double tmp_deg = gr[line_num].data[i].deg;
-						if(tmp_deg > 180.){
-							tmp_deg -= 180.;
-						}
-						dest_theta = -1. * tmp_deg;
-						//GUIプロットのためだけに代入
-						dest_x = gr[line_num].data[i].x;
-						dest_y = gr[line_num].data[i].y;
-						break;
-					}
-				}
-				//左右逆旋回
-				if(dest_theta < 0.){
-					mov.Left(abs(dest_theta));
-					while(mov.ChkMoveState() == false);
-				}
-				const double goal_diff = 420.;
-				dest_r -= 420.;
-				mov.Rev(dest_r);
-				while(mov.ChkMoveState() == false);
 
 			}
 
@@ -456,11 +419,33 @@ int main(void) {
 			//Line→赤
 			//それ以外→青
 #endif
-			log_r.push_back(dest_r);
-			log_theta.push_back(dest_theta);
-			std::cout<<log_r.size()<<std::endl;
-			mov.ConvertToMove(dest_r, dest_theta);
-			while(mov.ChkMoveState() == false);
+			if(step == 0){
+				log_r.push_back(dest_r);
+				log_theta.push_back(dest_theta);
+				mov.ConvertToMove(dest_r, dest_theta);
+				while(mov.ChkMoveState() == false);
+			}
+			else if(step == 1){
+				log_r.push_back(0.);
+				log_theta.push_back(dest_theta);
+				if(dest_theta < 0.){
+					mov.Right(abs(dest_theta));
+				}
+				else{
+					mov.Left(abs(dest_theta));
+				}
+				// mov.ConvertToMove(0., dest_theta);
+				while(mov.ChkMoveState() == false);
+				//180度旋回
+				log_r.push_back(180.);
+				log_theta.push_back(dest_r);
+				mov.Left(180.);
+				while(mov.ChkMoveState() == false);
+				mov.Rev(dest_r);
+				while(mov.ChkMoveState() == false);
+			}
+
+
 		}
 
         mov.Shoot();

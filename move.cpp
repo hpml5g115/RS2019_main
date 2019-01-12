@@ -116,7 +116,9 @@ void robomove::ConvertToMove(double distance, double angle){
 	//旋回完了まで待機
 	while(ChkMoveState() == false);
 	// while(move_finished==false);
-	Fwd(distance);
+	if(distance > 0.){
+		Fwd(distance);
+	}
 	//とりあえず待機状態にしておく
 	// while(move_finished==false);
 }
