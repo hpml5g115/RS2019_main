@@ -404,6 +404,51 @@ int main(void) {
 			else if(step == 1){
 
 			}
+			else if(step == 2){
+				//長い軸に対して移動
+				double x_diff = abs(gr[line_num].max_x() - gr[line_num].min_x());
+				double y_diff = abs(gr[line_num].max_y() - gr[line_num].min_y());
+				if(x_diff < y_diff){
+					std::cout<<"y axis longer"<<std::endl;
+					dest_y = gr[line_num].min_y();
+				}
+				else{
+					std::cout<<"x axis longer"<<std::endl;
+					dest_x = gr[line_num].min_x();
+				}
+				dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
+				dest_theta = atan2(dest_y, dest_x);
+				//radをdegに変換
+				dest_theta = dest_theta * 180 / M_PI;
+			}
+			else if(step == 3){
+				//一番近い部分の角度分旋回→後退
+				dest_r = gr[line_num].min_distance();
+				for(int i = 0; i<gr[line_num].data.size();i++){
+					if(dest_r == gr[line_num].data[i].distance){
+						std::cout<<"found!"<<std::endl;
+						double tmp_deg = gr[line_num].data[i].deg;
+						if(tmp_deg > 180.){
+							tmp_deg -= 180.;
+						}
+						dest_theta = -1. * tmp_deg;
+						//GUIプロットのためだけに代入
+						dest_x = gr[line_num].data[i].x;
+						dest_y = gr[line_num].data[i].y;
+						break;
+					}
+				}
+				//左右逆旋回
+				if(dest_theta < 0.){
+					mov.Left(abs(dest_theta));
+					while(mov.ChkMoveState() == false);
+				}
+				const double goal_diff = 420.;
+				dest_r -= 420.;
+				mov.Rev(dest_r);
+				while(mov.ChkMoveState() == false);
+
+			}
 
 			//デバッグ用
 			std::cout << "dest_x=" << dest_x << ", dest_y=" << dest_y << "\n";
