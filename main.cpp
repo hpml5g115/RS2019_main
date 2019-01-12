@@ -18,7 +18,7 @@
 #include "rplidar.h" //RPLIDAR standard sdk, all-in-one header
 
 //GUIなしで実行
-// #define _NO_GUI
+#define _NO_GUI
 
 #ifndef _NO_GUI
 	#include <opencv2/core/core.hpp>
@@ -250,7 +250,7 @@ int main(void) {
 				//それ以外→赤
 #endif
 
-				mov.ConvertToMove(dest_r, dest_theta);
+				mov.ConvertToMove(dest_r, dest_theta,3);
 	    	}
 	        // delay(1000);
 			bool ball_captured = false;
@@ -287,7 +287,7 @@ int main(void) {
 			if(rev_count > 2){
 				rev_count = 0;
 				delay(500);
-				mov.Rev(200);
+				mov.Rev(200,3);
 				while(mov.ChkMoveState() == false);
 			}
 	    }while(continue_flag == 1);
@@ -301,6 +301,7 @@ int main(void) {
 		int line_count = 0;
 	    //回収→ゴール
 		//移動した座標を保存
+		// std::vector<double> log_r,log_theta;
 		std::vector<double> log_r,log_theta;
 		int step = 0;
 		while(step < 2){
@@ -421,25 +422,34 @@ int main(void) {
 			else if(step == 1){
 				std::cout<<"------angle adjsut mode------"<<std::endl;
 				//一番近い部分の角度分旋回→後退
+				const double target_angle = 180.;
 				dest_r = gr[line_num].min_distance();
 				double raw_deg = 0.;
 				for(int i = 0; i<gr[line_num].data.size();i++){
 					if(dest_r == gr[line_num].data[i].distance){
-						double tmp_deg = gr[line_num].data[i].deg;
+						dest_theta = -1.*(gr[line_num].data[i].deg - target_angle);
 						raw_deg = gr[line_num].data[i].deg;
-						if(tmp_deg > 180.){
-							tmp_deg -= 180.;
-						}
-						dest_theta = -1. * tmp_deg;
+						// if(tmp_deg > 360.){
+						// 	tmp_deg -= 360.;
+						// 	tmp_deg *= -1.;
+						// }
+						// else if(tmp_deg > 180.){
+						// 	tmp_deg -= 180.;
+						// }
+						// else{
+						// 	tmp_deg *= -1.;
+						// }
+						// dest_theta = -1. * tmp_deg;
+
 						break;
 					}
 				}
-				//正対させる
-				double comp_theta = fmod(raw_deg + 180.,360.);
+				//反転させる
 				std::cout<<"raw_deg:"<<raw_deg<<std::endl;
-				std::cout<<"angle diff:"<<comp_theta<<std::endl;
-				const double target_angle = 180. + 5.;
-				if(comp_theta < 185.){
+				const double angle_diff = 5.;
+				const double angle_min = target_angle - angle_diff;
+				const double angle_max = target_angle + angle_diff;
+				if(raw_deg > angle_min && raw_deg < angle_max){
 					front_adjust = true;
 				}
 			}
@@ -461,8 +471,8 @@ int main(void) {
 #endif
 			if(step == 0){
 				log_r.push_back(dest_r);
-				log_theta.push_back(0.);
-				mov.ConvertToMove(dest_r, dest_theta);
+				// log_theta.push_back(0.);
+				mov.ConvertToMove(dest_r, dest_theta,4);
 				while(mov.ChkMoveState() == false);
 				step++;
 				mov.LiftUp();
@@ -470,25 +480,22 @@ int main(void) {
 			}
 			else if(step == 1){
 				if(front_adjust == true){
-					mov.Right(180.);
-					while(mov.ChkMoveState() == false);
-					delay(1000);
 					//後退して位置合わせ
 					const double wall_diff = 400.;
 					double rev_length = dest_r - wall_diff;
 					std::cout<<"rev_length="<<rev_length<<std::endl;
 					if(rev_length>0.){
-						mov.Rev(rev_length);
+						mov.Rev(rev_length,5);
 						while(mov.ChkMoveState() == false);
 						log_r.push_back(rev_length);
-						log_theta.push_back(0.);
+						// log_theta.push_back(0.);
 					}
 					step++;
 				}
 				else{
 					log_r.push_back(0.);
-					log_theta.push_back(dest_theta);
-					mov.ConvertToMove(0., dest_theta);
+					// log_theta.push_back(dest_theta);
+					mov.ConvertToMove(0., dest_theta,4);
 					while(mov.ChkMoveState() == false);
 				}
 			}
@@ -502,14 +509,21 @@ int main(void) {
         std::cout << "shoot completed.\n" << std::endl;
 		delay(1000);
 		std::cout<<"log_size="<<log_r.size()<<std::endl;
+		double distance_total = 0.;
 		for(int i=log_r.size()-1;i>=0;i--){
-			std::cout << "dest_r=" << log_r[i] << ", dest_theta=" << -log_theta[i] << std::endl;
-			mov.ConvertToMove(log_r[i], -log_theta[i]);
-			while(mov.ChkMoveState() == false);
-			delay(500);
+			// std::cout << "dest_r=" << log_r[i] << ", dest_theta=" << -log_theta[i] << std::endl;
+			distance_total+=log_r[i];
+			std::cout << "dest_r=" << log_r[i] << std::endl;
+			// mov.ConvertToMove(log_r[i], 0.);
+			// while(mov.ChkMoveState() == false);
+			// delay(500);
 		}
+		mov.ConvertToMove(distance_total, 0.,3);
+		while(mov.ChkMoveState() == false);
+#ifndef _NO_GUI
 		//debug
 		cv::waitKey(0);
+#endif
 	}
 	ExitProcess(drv);
 

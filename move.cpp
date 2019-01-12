@@ -33,6 +33,7 @@ robomove::robomove(){
 	move_finished = true;
 	dir = M_STOP;
 	pulse_num = 0;
+	straight_speed = 4;
 	if(wiringPiSetupGpio() == -1){
 		std::cerr << "wiringPi setup eroor!" << std::endl;
 		exit(1);
@@ -72,13 +73,15 @@ robomove::~robomove(){
 	digitalWrite(ARDUINO_1, 0);
 }
 
-void robomove::Fwd(double distance){
+void robomove::Fwd(double distance, int speed){
+	straight_speed = speed;
 	dir = M_FWD;
 	pulse_num = MmToPulse(distance);
 	move_update = true;
 }
 
-void robomove::Rev(double distance){
+void robomove::Rev(double distance, int speed){
+	straight_speed = speed;
 	dir = M_REV;
 	pulse_num = MmToPulse(distance);
 	move_update = true;
@@ -102,16 +105,16 @@ void robomove::Stop(void){
 	move_update = true;
 }
 
-void robomove::ConvertToMove(double distance, double angle){
+void robomove::ConvertToMove(double distance, double angle,int speed){
 	if(angle !=0.){
 		if(angle<0.){
 			double abs_angle = abs(angle);
-			std::cout << "r="<<abs_angle << std::endl;
+			// std::cout << "r="<<abs_angle << std::endl;
 			Right(abs_angle);
 		}
 		else{
 			double abs_angle = abs(angle);
-			std::cout << "l="<<abs_angle << std::endl;
+			// std::cout << "l="<<abs_angle << std::endl;
 			Left(abs_angle);
 		}
 		//旋回完了まで待機
@@ -119,7 +122,7 @@ void robomove::ConvertToMove(double distance, double angle){
 	}
 	// while(move_finished==false);
 	if(distance > 0.){
-		Fwd(distance);
+		Fwd(distance, speed);
 	}
 	//とりあえず待機状態にしておく
 	// while(move_finished==false);
@@ -218,6 +221,7 @@ long robomove::AngleToPulse(double angle){
 void robomove::Run(void){
 	long now_pulse_num = 0;
 	thread_continue = true;
+	int delay_time = 4;
 	while(thread_continue == true){
 		//移動の指令値が出たとき
 		if(move_update == true){
@@ -228,18 +232,22 @@ void robomove::Run(void){
 				case M_FWD:
 					digitalWrite(R_DIR, 0);
 					digitalWrite(L_DIR, 0);
+					delay_time = straight_speed;
 					break;
 				case M_REV:
 					digitalWrite(R_DIR, 1);
 					digitalWrite(L_DIR, 1);
+					delay_time = straight_speed;
 					break;
 				case M_RIGHT:
 					digitalWrite(R_DIR, 1);
 					digitalWrite(L_DIR, 0);
+					delay_time = 5;
 					break;
 				case M_LEFT:
 					digitalWrite(R_DIR, 0);
 					digitalWrite(L_DIR, 1);
+					delay_time = 5;
 					break;
 				default:
 					//動作を中断
@@ -254,7 +262,7 @@ void robomove::Run(void){
 		if(move_finished == false){
 			digitalWrite(R_PULSE, 1);
 			digitalWrite(L_PULSE, 1);
-			delay(4);
+			delay(delay_time);
 			now_pulse_num++;
 			if(now_pulse_num == pulse_num){
 				move_finished = true;
@@ -263,7 +271,7 @@ void robomove::Run(void){
 		//PULSEを下げる
 		digitalWrite(R_PULSE, 0);
 		digitalWrite(L_PULSE, 0);
-		delay(4);
+		delay(delay_time);
 	}
 	std::cout << "move thread finished" << std::endl;
 }

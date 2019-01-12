@@ -46,12 +46,12 @@ public:
     robomove();
     ~robomove();
     //前進(mm)
-    void Fwd(double distance);
-    void Rev(double distance);
+    void Fwd(double distance, int speed);
+    void Rev(double distance, int speed);
     void Right(double angle);
     void Left(double angle);
     void Stop(void);
-    void ConvertToMove(double distance, double angle);
+    void ConvertToMove(double distance, double angle, int speed);
     bool ChkMoveState(void);
     bool ChkBallState(void);
     bool Busy(void);
@@ -70,6 +70,7 @@ private:
   bool move_finished;
   int dir;
   long pulse_num;
+  int straight_speed;
 
   long MmToPulse(double distance);
   long AngleToPulse(double angle);
