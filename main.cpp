@@ -32,7 +32,7 @@
 #include "class.h"
 
 // #define _ARM_TEST
-#define _GOAL_TEST
+// #define _GOAL_TEST
 
 #ifdef _ARM_TEST
 int main(void) {
@@ -278,8 +278,8 @@ int main(void) {
 				while(mov.ChkMoveState() == false);
 			}
 	    }while(continue_flag == 1);
-		mov.Rev(300);
-		while(mov.ChkMoveState()==false);
+		// mov.Rev(300);
+		// while(mov.ChkMoveState()==false);
 
 #endif
 
@@ -388,11 +388,13 @@ int main(void) {
 			dest_theta = 0.;
 			//途中まで移動
 			if(step == 0){
-				const double shrink_rate = 0.5;
+				const double shrink_rate = 0.65;
 				dest_x = gr[line_num].ave_x() * shrink_rate;
 				dest_y = gr[line_num].ave_y() * shrink_rate;
 				dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
 				dest_theta = atan2(dest_y, dest_x);
+				//radをdegに変換
+				dest_theta = dest_theta * 180 / M_PI;
 			}
 			else if(step == 1){
 				//長い軸に対して移動
@@ -417,14 +419,27 @@ int main(void) {
 				for(int i = 0; i<gr[line_num].data.size();i++){
 					if(dest_r == gr[line_num].data[i].distance){
 						std::cout<<"found!"<<std::endl;
-						dest_theta = gr[line_num].data[i].deg;
+						double tmp_deg = gr[line_num].data[i].deg;
+						if(tmp_deg > 180.){
+							tmp_deg -= 180.;
+						}
+						dest_theta = -1. * tmp_deg;
 						//GUIプロットのためだけに代入
 						dest_x = gr[line_num].data[i].x;
 						dest_y = gr[line_num].data[i].y;
 						break;
 					}
 				}
-				dest_theta*= -1.;
+				//左右逆旋回
+				if(dest_theta < 0.){
+					mov.Left(abs(dest_theta));
+					while(mov.ChkMoveState() == false);
+				}
+				const double goal_diff = 420.;
+				dest_r -= 420.;
+				mov.Rev(dest_r);
+				while(mov.ChkMoveState() == false);
+
 			}
 
 			//デバッグ用
