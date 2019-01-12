@@ -31,7 +31,7 @@
 #include "grouping.h"
 #include "class.h"
 
-// #define _ARM_TEST
+#define _ARM_TEST
 #define _GOAL_TEST
 
 #ifdef _ARM_TEST
@@ -290,7 +290,7 @@ int main(void) {
 		//移動した座標を保存
 		std::vector<double> log_r,log_theta;
 		int step = 0;
-		while(step < 3){
+		while(step < 2){
 			do{
 				//リセット
 				measure current_result;
@@ -387,8 +387,12 @@ int main(void) {
 			dest_y = 0.;
 			dest_r = 0.;
 			dest_theta = 0.;
+
+			bool front_adjust = false;
+
 			//途中まで移動
 			if(step == 0){
+				std::cout<<"close mode"<<std::endl;
 				const double shrink_distance = 800.;
 				dest_x = gr[line_num].ave_x();
 				dest_y = gr[line_num].ave_y();
@@ -399,56 +403,33 @@ int main(void) {
 				dest_y = dest_r * sin(dest_theta);
 				//radをdegに変換
 				dest_theta = dest_theta * 180 / M_PI;
-				step++;
 			}
 			else if(step == 1){
-
-			}
-			else if(step == 2){
-				//長い軸に対して移動
-				double x_diff = abs(gr[line_num].max_x() - gr[line_num].min_x());
-				double y_diff = abs(gr[line_num].max_y() - gr[line_num].min_y());
-				if(x_diff < y_diff){
-					std::cout<<"y axis longer"<<std::endl;
-					dest_y = gr[line_num].min_y();
-				}
-				else{
-					std::cout<<"x axis longer"<<std::endl;
-					dest_x = gr[line_num].min_x();
-				}
-				dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2));
-				dest_theta = atan2(dest_y, dest_x);
-				//radをdegに変換
-				dest_theta = dest_theta * 180 / M_PI;
-			}
-			else if(step == 3){
+				std::cout<<"------angle adjsut mode------"<<std::endl;
 				//一番近い部分の角度分旋回→後退
 				dest_r = gr[line_num].min_distance();
+				double raw_deg = 0.;
 				for(int i = 0; i<gr[line_num].data.size();i++){
 					if(dest_r == gr[line_num].data[i].distance){
-						std::cout<<"found!"<<std::endl;
 						double tmp_deg = gr[line_num].data[i].deg;
+						raw_deg = gr[line_num].data[i].deg;
 						if(tmp_deg > 180.){
 							tmp_deg -= 180.;
 						}
 						dest_theta = -1. * tmp_deg;
-						//GUIプロットのためだけに代入
-						dest_x = gr[line_num].data[i].x;
-						dest_y = gr[line_num].data[i].y;
 						break;
 					}
 				}
-				//左右逆旋回
-				if(dest_theta < 0.){
-					mov.Left(abs(dest_theta));
-					while(mov.ChkMoveState() == false);
+				//正対させる
+				double comp_theta = fmod(raw_deg + 180.,360.);
+				std::cout<<"raw_deg:"<<raw_deg<<std::endl;
+				std::cout<<"angle diff:"<<comp_theta<<std::endl;
+				const double target_angle = 180. + 5.;
+				if(comp_theta < 185.){
+					front_adjust = true;
 				}
-				const double goal_diff = 420.;
-				dest_r -= 420.;
-				mov.Rev(dest_r);
-				while(mov.ChkMoveState() == false);
-
 			}
+
 
 			//デバッグ用
 			std::cout << "dest_x=" << dest_x << ", dest_y=" << dest_y << "\n";
@@ -466,42 +447,51 @@ int main(void) {
 #endif
 			if(step == 0){
 				log_r.push_back(dest_r);
-				log_theta.push_back(dest_theta);
+				log_theta.push_back(0.);
 				mov.ConvertToMove(dest_r, dest_theta);
 				while(mov.ChkMoveState() == false);
+				step++;
 			}
 			else if(step == 1){
-				log_r.push_back(0.);
-				log_theta.push_back(dest_theta);
-				if(dest_theta < 0.){
-					mov.Right(abs(dest_theta));
+				if(front_adjust == true){
+					mov.Right(180.);
+					while(mov.ChkMoveState() == false);
+					delay(1000);
+					//後退して位置合わせ
+					const double wall_diff = 420.;
+					double rev_length = dest_r - wall_diff;
+					std::cout<<"rev_length="<<rev_length<<std::endl;
+					if(rev_length>0.){
+						mov.Rev(rev_length);
+						while(mov.ChkMoveState() == false);
+						log_r.push_back(rev_length);
+						log_theta.push_back(0.);
+					}
+					step++;
 				}
 				else{
-					mov.Left(abs(dest_theta));
+					log_r.push_back(0.);
+					log_theta.push_back(dest_theta);
+					mov.ConvertToMove(0., dest_theta);
+					while(mov.ChkMoveState() == false);
 				}
-				// mov.ConvertToMove(0., dest_theta);
-				while(mov.ChkMoveState() == false);
-				//180度旋回
-				log_r.push_back(180.);
-				log_theta.push_back(dest_r);
-				mov.Left(180.);
-				while(mov.ChkMoveState() == false);
-				mov.Rev(dest_r);
-				while(mov.ChkMoveState() == false);
 			}
-
-
 		}
 
-        mov.Shoot();
-	    while(mov.Busy()==false);
-	    mov.FreeMode();
+        // mov.Shoot();
+	    // while(mov.Busy()==false);
+	    // mov.FreeMode();
         std::cout << "shoot completed.\n" << std::endl;
 		delay(1000);
+		std::cout<<"log_size="<<log_r.size()<<std::endl;
 		for(int i=log_r.size()-1;i>=0;i--){
-			mov.ConvertToMove(log_r[i], log_theta[i]);
+			std::cout << "dest_r=" << log_r[i] << ", dest_theta=" << -log_theta[i] << std::endl;
+			mov.ConvertToMove(log_r[i], -log_theta[i]);
 			while(mov.ChkMoveState() == false);
+			delay(500);
 		}
+		//debug
+		cv::waitKey(0);
 	}
 	ExitProcess(drv);
 
