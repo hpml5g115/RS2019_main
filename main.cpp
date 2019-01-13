@@ -251,7 +251,7 @@ int main(void) {
 				//それ以外→赤
 #endif
 
-				mov.ConvertToMove(dest_r, dest_theta,3);
+				mov.ConvertToMove(dest_r, dest_theta,4);
 	    	}
 	        // delay(1000);
 			bool ball_captured = false;
@@ -262,6 +262,14 @@ int main(void) {
 					ball_captured = true;
 					std::cout << "Ball is Captured." << std::endl;
 					rev_count = 0;
+					delay(1000);
+					//途中でボールをリリースしてしまった場合
+					if(mov.ChkBallState() == false){
+						continue_flag = 1;
+						rev_count++;
+					}
+
+
 					//持ち上げ
 					// mov.LiftUp();
 					// while(mov.Busy() == true);
@@ -286,9 +294,10 @@ int main(void) {
 			}
 
 			if(rev_count > 2){
-				rev_count = 0;
-				delay(500);
-				mov.Rev(200,3);
+				// rev_count = 0;
+				delay(100);
+				//事故回数に応じて後退
+				mov.Rev(200*rev_count,3);
 				while(mov.ChkMoveState() == false);
 			}
 	    }while(continue_flag == 1);
@@ -305,7 +314,7 @@ int main(void) {
 		// std::vector<double> log_r,log_theta;
 		std::vector<double> log_r,log_theta;
 		int step = 0;
-		while(step < 2){
+		while(step < 3){
 			do{
 				//リセット
 				measure current_result;
@@ -406,10 +415,16 @@ int main(void) {
 
 			bool front_adjust = false;
 
+			//角度補正の許容値
+			const double target_angle = 180.;
+			const double angle_diff = 5.;
+			const double angle_min = target_angle - angle_diff;
+			const double angle_max = target_angle + angle_diff;
+
 			//途中まで移動
 			if(step == 0){
 				std::cout << "close mode" << std::endl;
-				const double shrink_distance = 800.;
+				const double shrink_distance = 900.;
 				dest_x = gr[line_num].ave_x();
 				dest_y = gr[line_num].ave_y();
 				dest_r = sqrt(pow(dest_x, 2) + pow(dest_y, 2)) - shrink_distance;
@@ -423,7 +438,6 @@ int main(void) {
 			else if(step == 1){
 				std::cout << "------angle adjust mode------" << std::endl;
 				//一番近い部分の角度分旋回→後退
-				const double target_angle = 180.;
 				dest_r = gr[line_num].min_distance();
 				double raw_deg = 0.;
 				for(int i = 0; i<gr[line_num].data.size();i++){
@@ -447,11 +461,31 @@ int main(void) {
 				}
 				//反転させる
 				std::cout << "raw_deg:" << raw_deg << std::endl;
-				const double angle_diff = 5.;
-				const double angle_min = target_angle - angle_diff;
-				const double angle_max = target_angle + angle_diff;
 				if(raw_deg > angle_min && raw_deg < angle_max){
 					front_adjust = true;
+				}
+			}
+			else if(step == 2){
+				std::cout << "------Reverse-----" <<std::endl;
+				//一番近い部分の角度分旋回→後退
+				const double target_angle = 180.;
+				dest_r = gr[line_num].min_distance();
+				double raw_deg = 0.;
+				for(int i = 0; i<gr[line_num].data.size();i++){
+					if(dest_r == gr[line_num].data[i].distance){
+						dest_theta = -1. * (gr[line_num].data[i].deg - target_angle);
+						raw_deg = gr[line_num].data[i].deg;
+						break;
+					}
+				}
+				//反転させる
+				std::cout << "raw_deg:" << raw_deg << std::endl;
+				if(raw_deg > angle_min && raw_deg < angle_max){
+					front_adjust = true;
+				}
+				else{
+					front_adjust = false;
+					step--;
 				}
 			}
 
@@ -473,7 +507,7 @@ int main(void) {
 			if(step == 0){
 				log_r.push_back(dest_r);
 				// log_theta.push_back(0.);
-				mov.ConvertToMove(dest_r, dest_theta, 4);
+				mov.ConvertToMove(dest_r, dest_theta, 5);
 				while(mov.ChkMoveState() == false);
 				step++;
 				mov.LiftUp();
@@ -482,7 +516,7 @@ int main(void) {
 			else if(step == 1){
 				if(front_adjust == true){
 					//後退して位置合わせ
-					const double wall_diff = 400.;
+					const double wall_diff = 550.;
 					double rev_length = dest_r - wall_diff;
 					std::cout << "rev_length=" << rev_length << std::endl;
 					if(rev_length>0.){
@@ -496,9 +530,15 @@ int main(void) {
 				else{
 					log_r.push_back(0.);
 					// log_theta.push_back(dest_theta);
-					mov.ConvertToMove(0., dest_theta, 4);
+					mov.ConvertToMove(0., dest_theta, 5);
 					while(mov.ChkMoveState() == false);
 				}
+			}
+			else if(step == 2){
+				if(mov.ChkMoveState() == true){
+					break;
+				}
+				delay(500);
 			}
 		}
 
@@ -509,7 +549,7 @@ int main(void) {
 	    mov.FreeMode();
 		std::cout << "shoot completed.\n"
 				  << std::endl;
-		delay(1000);
+		delay(100);
 		std::cout << "log_size=" << log_r.size() << std::endl;
 		double distance_total = 0.;
 		for (int i = log_r.size() - 1; i >= 0; i--){
@@ -520,7 +560,7 @@ int main(void) {
 			// while(mov.ChkMoveState() == false);
 			// delay(500);
 		}
-		mov.ConvertToMove(distance_total, 0.,3);
+		mov.ConvertToMove(distance_total*0.7, 0.,4);
 		while(mov.ChkMoveState() == false);
 #ifndef _NO_GUI
 		//debug

@@ -106,7 +106,7 @@ void robomove::Stop(void){
 }
 
 void robomove::ConvertToMove(double distance, double angle,int speed){
-	if(angle !=0.){
+	if(abs(angle) > anglePerPulse){
 		if(angle<0.){
 			double abs_angle = abs(angle);
 			// std::cout << "r="<<abs_angle << std::endl;
@@ -121,7 +121,7 @@ void robomove::ConvertToMove(double distance, double angle,int speed){
 		while(ChkMoveState() == false);
 	}
 	// while(move_finished==false);
-	if(distance > 0.){
+	if(distance > dirPerPulse){
 		Fwd(distance, speed);
 	}
 	//とりあえず待機状態にしておく
@@ -242,12 +242,12 @@ void robomove::Run(void){
 				case M_RIGHT:
 					digitalWrite(R_DIR, 1);
 					digitalWrite(L_DIR, 0);
-					delay_time = 5;
+					delay_time = 6;
 					break;
 				case M_LEFT:
 					digitalWrite(R_DIR, 0);
 					digitalWrite(L_DIR, 1);
-					delay_time = 5;
+					delay_time = 6;
 					break;
 				default:
 					//動作を中断
