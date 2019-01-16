@@ -19,7 +19,7 @@
 #include "rplidar.h" //RPLIDAR standard sdk, all-in-one header
 
 //GUIなしで実行
-#define _NO_GUI
+// #define _NO_GUI
 
 #ifndef _NO_GUI
 	#include <opencv2/core/core.hpp>
